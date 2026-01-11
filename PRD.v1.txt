@@ -1,0 +1,474 @@
+Tentu, ini adalah pendekatan yang sangat profesional. Membuat **PRD (Product Requirements Document)** sebelum *coding* adalah ciri khas *Senior Engineer*. Dokumen ini akan menjadi panduanmu agar tidak "tersesat" saat pengerjaan dan memastikan fitur sesuai dengan narasi lomba.
+
+Berikut adalah **PRD & Implementation Roadmap** untuk MITRA-AI.
+
+---
+
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+**Project Name:** MITRA-AI Platform
+**Version:** 1.0 (MVP Competition Release)
+**Owner:** Faruq Mahdison
+**Target Deadline:** 17 Januari 2026 (Hard Deadline)
+
+## 1. Executive Summary
+
+MITRA-AI adalah platform penulisan akademik berbasis web yang memaksa mahasiswa untuk melakukan inisiasi pemikiran mandiri sebelum berkolaborasi dengan AI. Platform ini mengubah peran AI dari "generator jawaban" menjadi "mitra penguji (Socratic Tutor)" dan merekam jejak kognitif mahasiswa untuk keperluan penilaian dosen.
+
+## 2. User Personas
+
+* **The Student (User):** Ingin menyelesaikan tugas esai, tapi sering tergoda copy-paste. Butuh bantuan AI untuk *mempertajam* argumen, bukan *membuatkan* argumen.
+* **The Lecturer (Admin/Evaluator):** Ingin menilai orisinalitas dan proses berpikir mahasiswa, bukan hanya hasil akhir. Butuh bukti bahwa mahasiswa benar-benar paham.
+
+## 3. Core User Flow (The "Happy Path")
+
+1. **Onboarding:** Mahasiswa Login -> Masuk Dashboard -> Buat Proyek Baru ("Judul Tugas").
+2. **Phase 1 - Isolation (Locked Mode):** Editor teks terbuka. Fitur AI **mati/dikunci**. Copy-paste dinonaktifkan (atau dibatasi). Mahasiswa mengetik draf awal (min. 150 kata).
+3. **Phase 2 - Collaboration (Socratic Mode):** Setelah target kata tercapai, fitur Chat AI terbuka. Mahasiswa meminta *feedback*. AI bertanya balik/mengkritik. Mahasiswa merevisi tulisan berdasarkan masukan.
+4. **Phase 3 - Reflection (Validation Mode):** Mahasiswa klik "Selesai". Sistem memaksa isi form refleksi ("Apa yang kamu ubah?").
+5. **Export:** Sistem men-generate PDF yang berisi: Esai Final + Lampiran Riwayat Diskusi + Statistik Orisinalitas.
+
+## 4. Functional Requirements (Fitur & Spesifikasi)
+
+### A. The Smart Editor (Frontend)
+
+* **Paste Guard:** Mencegah user melakukan *paste* blok teks besar (> 20 kata sekaligus) di fase awal. Jika terdeteksi, muncul *toast warning*.
+* **Progress Tracker:** Bar visual yang menunjukkan progres menuju pembukaan fitur AI (misal: "Tulis 45 kata lagi untuk membuka AI").
+* **Snapshotting:** Sistem harus melakukan *auto-save* setiap 1 menit atau setiap paragraf selesai, merekam versi tulisan saat itu.
+
+### B. The AI Engine (Backend)
+
+* **Persona Management:** Backend harus bisa mengirim *System Prompt* yang berbeda:
+* *Default:* Socratic Tutor (Bertanya, klarifikasi).
+* *Hard Mode:* Devil's Advocate (Menyerang argumen).
+
+
+* **Constraint:** AI tidak boleh mengeluarkan output berupa teks panjang yang bisa di-copy paste sebagai isi esai. Output maksimal 2-3 kalimat per respon.
+
+### C. The Cognitive Dashboard (Reporting)
+
+* **Version Compare:** Menghitung perbedaan (diff) antara Draf Awal (sebelum chat AI) dan Draf Akhir.
+* **Integrity Log:** Menampilkan log chat secara kronologis di lampiran PDF.
+
+## 5. Technical Architecture (Vercel + Render)
+
+Karena kamu memisahkan Frontend dan Backend, arsitekturnya adalah **Decoupled Monolith** atau **Microservice**.
+
+* **Frontend (Vercel):**
+* *Framework:* Next.js (App Router).
+* *Deployment:* Vercel (Free Tier).
+* *Tugas:* UI/UX, Rich Text Editor (Tiptap), State Management (Locking Logic), API Consumption.
+
+
+* **Backend (Render):**
+* *Framework:* NestJS.
+* *Deployment:* Render Web Service (Free/Starter Tier).
+* *Database:* PostgreSQL (via Render Managed DB atau Neon Tech - Free Tier).
+* *Tugas:* Auth Logic, OpenAI API handling, CRUD Database, PDF Generation.
+
+
+
+**Komunikasi:**
+
+* Frontend memanggil Backend via REST API (`POST https://api-mitra-ai.onrender.com/...`).
+* **PENTING:** Atur CORS (Cross-Origin Resource Sharing) di NestJS agar menerima request dari domain Vercel.
+
+## 6. Database Schema Design (Conceptual)
+
+Kamu butuh 4 tabel utama:
+
+1. **Users:** `id, email, password, name`
+2. **Projects:** `id, user_id, title, created_at, status (DRAFT/FINAL)`
+3. **ProjectSnapshots:** `id, project_id, content_text, timestamp, stage (PRE_AI / POST_AI)` -> *Untuk melihat evolusi tulisan.*
+4. **AiInteractions:** `id, project_id, user_prompt, ai_response, timestamp` -> *Untuk log lampiran.*
+
+## 7. Implementation Roadmap (Plan of Attack)
+
+Bagi pengerjaan menjadi 4 Sprint pendek (3-4 hari per sprint).
+
+### Sprint 1: The Foundation (Setup & Auth)
+
+* **Goal:** Frontend & Backend deployed & connected.
+* **Tasks:**
+* Init Repo Next.js & NestJS.
+* Setup Database (Postgres) di Render/Neon.
+* Deploy "Hello World" API ke Render.
+* Deploy Frontend ke Vercel.
+* Setup Login/Register sederhana (JWT di NestJS).
+* **Deliverable:** User bisa login dan melihat halaman kosong.
+
+
+
+### Sprint 2: The Constraint System (Core Innovation)
+
+* **Goal:** Editor teks yang bisa "mengunci" user.
+* **Tasks:**
+* Install Tiptap Editor di Next.js.
+* Buat logic `wordCount` state.
+* Buat blokir tombol AI jika `wordCount < 150`.
+* Buat *Paste Event Listener* untuk memblokir copy-paste.
+* **Deliverable:** User bisa ngetik, tapi gak bisa paste, dan tombol AI mati nyala otomatis.
+
+
+
+### Sprint 3: The Intelligence (AI Integration)
+
+* **Goal:** Chat dengan Socratic AI.
+* **Tasks:**
+* Integrasi OpenAI API di NestJS.
+* Buat endpoint `POST /chat`.
+* Prompt Engineering: Pastikan AI tidak mau disuruh ngerjain tugas.
+* Tampilkan chat bubble di sebelah kanan editor.
+* **Deliverable:** User bisa chatting dengan "Dosen AI" yang galak/kritis.
+
+
+
+### Sprint 4: The Evidence (Reporting & Polish)
+
+* **Goal:** Output untuk Juri/Dosen.
+* **Tasks:**
+* Simpan log chat ke Database.
+* Buat fitur "Finish Project".
+* Generate PDF (gunakan library seperti `pdfkit` atau `puppeteer` di NestJS) yang menggabungkan esai + log chat.
+* UI Polishing (Warna, Font, Logo MITRA-AI).
+* **Deliverable:** Website siap didemokan (rekam video layar untuk presentasi lomba).
+
+
+
+---
+
+### Catatan Tambahan untuk Developer (Faruq):
+
+1. **Isu Cold Start Render:** Render Free Tier akan "tidur" kalau tidak diakses 15 menit. Request pertama akan memakan waktu 50 detik.
+* *Solusi:* Saat demo/presentasi nanti, buka dulu websitenya 5 menit sebelum giliranmu agar server "bangun". Atau gunakan layanan *uptime monitor* (seperti UptimeRobot) untuk nge-ping server Render kamu setiap 5 menit biar gak tidur.
+
+
+2. **Environment Variables:**
+* Di Vercel: Set `NEXT_PUBLIC_API_URL` ke URL Render kamu.
+* Di Render: Set `DATABASE_URL`, `OPENAI_API_KEY`, dan `FRONTEND_URL` (untuk whitelist CORS).
+
+
+
+Dokumen ini bisa kamu jadikan acuan. Apakah strukturnya cukup jelas untuk langsung dieksekusi?
+
+Tentu, ini adalah pendekatan yang sangat profesional. Membuat **PRD (Product Requirements Document)** sebelum *coding* adalah ciri khas *Senior Engineer*. Dokumen ini akan menjadi panduanmu agar tidak "tersesat" saat pengerjaan dan memastikan fitur sesuai dengan narasi lomba.
+
+Berikut adalah **PRD & Implementation Roadmap** untuk MITRA-AI.
+
+---
+
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+**Project Name:** MITRA-AI Platform
+**Version:** 1.0 (MVP Competition Release)
+**Owner:** Faruq Mahdison
+**Target Deadline:** 17 Januari 2026 (Hard Deadline)
+
+## 1. Executive Summary
+
+MITRA-AI adalah platform penulisan akademik berbasis web yang memaksa mahasiswa untuk melakukan inisiasi pemikiran mandiri sebelum berkolaborasi dengan AI. Platform ini mengubah peran AI dari "generator jawaban" menjadi "mitra penguji (Socratic Tutor)" dan merekam jejak kognitif mahasiswa untuk keperluan penilaian dosen.
+
+## 2. User Personas
+
+* **The Student (User):** Ingin menyelesaikan tugas esai, tapi sering tergoda copy-paste. Butuh bantuan AI untuk *mempertajam* argumen, bukan *membuatkan* argumen.
+* **The Lecturer (Admin/Evaluator):** Ingin menilai orisinalitas dan proses berpikir mahasiswa, bukan hanya hasil akhir. Butuh bukti bahwa mahasiswa benar-benar paham.
+
+## 3. Core User Flow (The "Happy Path")
+
+1. **Onboarding:** Mahasiswa Login -> Masuk Dashboard -> Buat Proyek Baru ("Judul Tugas").
+2. **Phase 1 - Isolation (Locked Mode):** Editor teks terbuka. Fitur AI **mati/dikunci**. Copy-paste dinonaktifkan (atau dibatasi). Mahasiswa mengetik draf awal (min. 150 kata).
+3. **Phase 2 - Collaboration (Socratic Mode):** Setelah target kata tercapai, fitur Chat AI terbuka. Mahasiswa meminta *feedback*. AI bertanya balik/mengkritik. Mahasiswa merevisi tulisan berdasarkan masukan.
+4. **Phase 3 - Reflection (Validation Mode):** Mahasiswa klik "Selesai". Sistem memaksa isi form refleksi ("Apa yang kamu ubah?").
+5. **Export:** Sistem men-generate PDF yang berisi: Esai Final + Lampiran Riwayat Diskusi + Statistik Orisinalitas.
+
+## 4. Functional Requirements (Fitur & Spesifikasi)
+
+### A. The Smart Editor (Frontend)
+
+* **Paste Guard:** Mencegah user melakukan *paste* blok teks besar (> 20 kata sekaligus) di fase awal. Jika terdeteksi, muncul *toast warning*.
+* **Progress Tracker:** Bar visual yang menunjukkan progres menuju pembukaan fitur AI (misal: "Tulis 45 kata lagi untuk membuka AI").
+* **Snapshotting:** Sistem harus melakukan *auto-save* setiap 1 menit atau setiap paragraf selesai, merekam versi tulisan saat itu.
+
+### B. The AI Engine (Backend)
+
+* **Persona Management:** Backend harus bisa mengirim *System Prompt* yang berbeda:
+* *Default:* Socratic Tutor (Bertanya, klarifikasi).
+* *Hard Mode:* Devil's Advocate (Menyerang argumen).
+
+
+* **Constraint:** AI tidak boleh mengeluarkan output berupa teks panjang yang bisa di-copy paste sebagai isi esai. Output maksimal 2-3 kalimat per respon.
+
+### C. The Cognitive Dashboard (Reporting)
+
+* **Version Compare:** Menghitung perbedaan (diff) antara Draf Awal (sebelum chat AI) dan Draf Akhir.
+* **Integrity Log:** Menampilkan log chat secara kronologis di lampiran PDF.
+
+## 5. Technical Architecture (Vercel + Render)
+
+Karena kamu memisahkan Frontend dan Backend, arsitekturnya adalah **Decoupled Monolith** atau **Microservice**.
+
+* **Frontend (Vercel):**
+* *Framework:* Next.js (App Router).
+* *Deployment:* Vercel (Free Tier).
+* *Tugas:* UI/UX, Rich Text Editor (Tiptap), State Management (Locking Logic), API Consumption.
+
+
+* **Backend (Render):**
+* *Framework:* NestJS.
+* *Deployment:* Render Web Service (Free/Starter Tier).
+* *Database:* PostgreSQL (via Render Managed DB atau Neon Tech - Free Tier).
+* *Tugas:* Auth Logic, OpenAI API handling, CRUD Database, PDF Generation.
+
+
+
+**Komunikasi:**
+
+* Frontend memanggil Backend via REST API (`POST https://api-mitra-ai.onrender.com/...`).
+* **PENTING:** Atur CORS (Cross-Origin Resource Sharing) di NestJS agar menerima request dari domain Vercel.
+
+## 6. Database Schema Design (Conceptual)
+
+Kamu butuh 4 tabel utama:
+
+1. **Users:** `id, email, password, name`
+2. **Projects:** `id, user_id, title, created_at, status (DRAFT/FINAL)`
+3. **ProjectSnapshots:** `id, project_id, content_text, timestamp, stage (PRE_AI / POST_AI)` -> *Untuk melihat evolusi tulisan.*
+4. **AiInteractions:** `id, project_id, user_prompt, ai_response, timestamp` -> *Untuk log lampiran.*
+
+## 7. Implementation Roadmap (Plan of Attack)
+
+Bagi pengerjaan menjadi 4 Sprint pendek (3-4 hari per sprint).
+
+### Sprint 1: The Foundation (Setup & Auth)
+
+* **Goal:** Frontend & Backend deployed & connected.
+* **Tasks:**
+* Init Repo Next.js & NestJS.
+* Setup Database (Postgres) di Render/Neon.
+* Deploy "Hello World" API ke Render.
+* Deploy Frontend ke Vercel.
+* Setup Login/Register sederhana (JWT di NestJS).
+* **Deliverable:** User bisa login dan melihat halaman kosong.
+
+
+
+### Sprint 2: The Constraint System (Core Innovation)
+
+* **Goal:** Editor teks yang bisa "mengunci" user.
+* **Tasks:**
+* Install Tiptap Editor di Next.js.
+* Buat logic `wordCount` state.
+* Buat blokir tombol AI jika `wordCount < 150`.
+* Buat *Paste Event Listener* untuk memblokir copy-paste.
+* **Deliverable:** User bisa ngetik, tapi gak bisa paste, dan tombol AI mati nyala otomatis.
+
+
+
+### Sprint 3: The Intelligence (AI Integration)
+
+* **Goal:** Chat dengan Socratic AI.
+* **Tasks:**
+* Integrasi OpenAI API di NestJS.
+* Buat endpoint `POST /chat`.
+* Prompt Engineering: Pastikan AI tidak mau disuruh ngerjain tugas.
+* Tampilkan chat bubble di sebelah kanan editor.
+* **Deliverable:** User bisa chatting dengan "Dosen AI" yang galak/kritis.
+
+
+
+### Sprint 4: The Evidence (Reporting & Polish)
+
+* **Goal:** Output untuk Juri/Dosen.
+* **Tasks:**
+* Simpan log chat ke Database.
+* Buat fitur "Finish Project".
+* Generate PDF (gunakan library seperti `pdfkit` atau `puppeteer` di NestJS) yang menggabungkan esai + log chat.
+* UI Polishing (Warna, Font, Logo MITRA-AI).
+* **Deliverable:** Website siap didemokan (rekam video layar untuk presentasi lomba).
+
+
+
+---
+
+### Catatan Tambahan untuk Developer (Faruq):
+
+1. **Isu Cold Start Render:** Render Free Tier akan "tidur" kalau tidak diakses 15 menit. Request pertama akan memakan waktu 50 detik.
+* *Solusi:* Saat demo/presentasi nanti, buka dulu websitenya 5 menit sebelum giliranmu agar server "bangun". Atau gunakan layanan *uptime monitor* (seperti UptimeRobot) untuk nge-ping server Render kamu setiap 5 menit biar gak tidur.
+
+
+2. **Environment Variables:**
+* Di Vercel: Set `NEXT_PUBLIC_API_URL` ke URL Render kamu.
+* Di Render: Set `DATABASE_URL`, `OPENAI_API_KEY`, dan `FRONTEND_URL` (untuk whitelist CORS).
+
+
+
+Dokumen ini bisa kamu jadikan acuan. Apakah strukturnya cukup jelas untuk langsung dieksekusi?
+
+Ini ide yang sangat cerdas. Jika kamu ingin "mengoper" pengerjaan kodingan ini ke AI lain (seperti **Cursor**, **Windsurf**, **Github Copilot**, atau **ChatGPT o1**), kamu butuh dokumen yang **sangat spesifik secara teknis**.
+
+AI koding bekerja paling baik jika dikasih **Technical Specification (Tech Spec)**, bukan sekadar PRD naratif. Mereka butuh struktur database, nama endpoint, dan logika komponen.
+
+Berikut adalah **Dokumen Spesifikasi Teknis (Tech Spec)** yang sudah saya format khusus agar bisa langsung kamu *copy-paste* ke AI *coder* tersebut.
+
+---
+
+## 📋 NALAR.AI - Technical Specification Document
+
+**Target Stack:** Next.js (Frontend) + NestJS (Backend) + Prisma (ORM) + PostgreSQL.
+**Objective:** Build an MVP for an academic writing platform that enforces critical thinking via "Locked AI" workflow.
+
+### 1. Project Structure & Standards
+
+* **Architecture:** Monorepo (or separate folders: `/client` and `/server`).
+* **Styling:** Tailwind CSS + Shadcn UI (for fast UI components).
+* **Editor Engine:** Tiptap (Headless wrapper around ProseMirror).
+* **Code Style:** TypeScript, **2 spaces indentation** (Strict), Functional Components.
+
+---
+
+### 2. Database Schema (Prisma)
+
+*Instruction for AI:* Create a `schema.prisma` with the following models.
+
+```prisma
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  projects  Project[]
+}
+
+model Project {
+  id           String             @id @default(uuid())
+  title        String
+  content      String             @db.Text // Current draft content
+  wordCount    Int                @default(0)
+  isAiUnlocked Boolean            @default(false) // True if wordCount >= 150
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  userId       String
+  user         User               @relation(fields: [userId], references: [id])
+  snapshots    ProjectSnapshot[]
+  aiChats      AiInteraction[]
+}
+
+model ProjectSnapshot {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  timestamp DateTime @default(now())
+  stage     String   // ENUM: 'INITIAL_DRAFT', 'POST_AI_FEEDBACK'
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+}
+
+model AiInteraction {
+  id          String   @id @default(uuid())
+  userPrompt  String   @db.Text
+  aiResponse  String   @db.Text
+  detectedFallacy String? // Optional: Did AI detect a logical fallacy?
+  timestamp   DateTime @default(now())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+}
+
+```
+
+---
+
+### 3. Backend API Contract (NestJS)
+
+*Instruction for AI:* Implement these endpoints in a `ProjectController` and `AiController`.
+
+**A. Projects Module**
+
+* `POST /projects`: Create new blank project.
+* `GET /projects/:id`: Get project details + content.
+* `PATCH /projects/:id/save`:
+* **Logic:** Receive `content` string.
+* Calculate `wordCount` (split by spaces).
+* If `wordCount >= 150` AND `isAiUnlocked` is false -> Set `isAiUnlocked = true`.
+* Update DB. Return `{ success: true, isAiUnlocked: boolean }`.
+
+
+
+**B. AI Module (The Logic Core)**
+
+* `POST /ai/analyze`:
+* **Body:** `{ projectId: string, currentText: string, userQuery: string }`
+* **System Prompt Strategy:**
+> "You are NALAR, a Socratic Tutor for academic writing. Your goal is to sharpen the student's logic.
+
+
+> 1. DO NOT write the essay for them.
+> 2. Identify if there are logical fallacies (Strawman, Ad Hominem, Circular Reasoning).
+> 3. Answer with a question or a critique that forces the student to rethink.
+> 4. Keep response under 3 sentences."
+> 
+> 
+
+
+* **Action:** Save interaction to `AiInteraction` table.
+
+
+
+---
+
+### 4. Frontend Component Logic (Next.js)
+
+*Instruction for AI:* Build the `EditorPage` with specific constraints.
+
+**A. Component: `LockedEditor**`
+
+* **Library:** `@tiptap/react`, `@tiptap/starter-kit`.
+* **State:**
+* `content`: string.
+* `wordCount`: derived from content text.
+* `isLocked`: boolean (fetched from API).
+
+
+* **The "Paste Guard" Logic (Crucial):**
+* Implement Tiptap `handlePaste` editor prop.
+* Logic:
+```typescript
+handlePaste: (view, event, slice) => {
+   const pastedText = slice.content.textBetween(0, slice.content.size);
+   if (pastedText.split(' ').length > 20) {
+      toast.error("Zona Inisiasi: Mohon ketik gagasanmu sendiri, jangan copy-paste.");
+      return true; // Cancel paste
+   }
+   return false; // Allow paste
+}
+
+```
+
+
+**B. Component: `AiSidebar**`
+
+* **Condition:** If `isLocked === true`, render a "Locked Overlay" with a progress bar: `(currentWordCount / 150) * 100%`.
+* **Condition:** If `isLocked === false`, render the Chat Interface.
+
+---
+
+### 5. Prompting Guide (Cara Suruh AI Coder)
+
+Jika kamu menggunakan **Cursor** atau **Windsurf**, kamu bisa copy-paste instruksi berikut secara bertahap:
+
+**Prompt 1 (Setup):**
+
+> "Create a new project workspace. Backend is NestJS with Prisma and PostgreSQL. Frontend is Next.js App Router with Tailwind. Please initialize the project structure and setup the Prisma schema as follows: [Paste Bagian 2 Schema di atas]."
+
+**Prompt 2 (Backend Logic):**
+
+> "In NestJS, create a `ProjectModule`. Implement a `save` endpoint that calculates word count from the content. If word count > 150, update a flag `isAiUnlocked` to true. Use 2-space indentation."
+
+**Prompt 3 (Frontend Editor):**
+
+> "Create a Tiptap editor component in Next.js. Implement a 'Paste Guard' that prevents pasting more than 20 words at a time. Show a toast error if triggered. Also, display a real-time word counter. If word count < 150, show a 'Locked' icon on the AI sidebar."
+
+**Prompt 4 (AI Integration):**
+
+> "Create a service in NestJS that calls OpenAI API. Use a system prompt that acts as a 'Socratic Tutor' that detects logical fallacies. Connect this to the frontend chat sidebar."
+
+---
+
+Dokumen ini sudah berisi **"Blueprints"** yang dipahami oleh LLM. Kamu tinggal kasih ini, dan AI tersebut akan (seharusnya) menulis kode yang presisi sesuai fitur **NALAR.AI**.
