@@ -1,0 +1,51 @@
+# 🏆 Juri Quick Access Guide
+
+## 🔐 Login Credentials
+- **Email**: `demo@gmail.com`
+- **Password**: `demo123`
+- **Role**: Demo User
+
+## 🚀 Quick Access Steps
+1. Open browser → `http://localhost:3000/login`
+2. Click **"🚀 Use Juri Credentials"** button (green section at top)
+3. Form automatically fills with credentials
+4. Click **"Sign In"** to enter dashboard
+
+## ✅ Features Available for Testing
+### 📝 Writing Features
+- **Smart Editor**: Rich text editor with paste protection
+- **AI Lock System**: AI unlocks after 150 words
+- **Word Count Tracking**: Real-time progress monitoring
+
+### 🤖 AI Features  
+- **Socratic AI Tutor**: Question-based learning
+- **Devil's Advocate**: Challenge your arguments
+- **Grammar Checker**: Improve writing quality
+- **Plagiarism Detection**: Ensure academic integrity
+- **Citation Suggestions**: Find relevant sources
+
+### 📊 Management Features
+- **Project Management**: Create and organize projects
+- **File Upload System**: Add images and documents
+- **Analytics Dashboard**: Track usage and performance
+- **Export Functionality**: Download complete reports
+
+## 📱 Mobile Testing
+- Jury access button is fully responsive
+- Works perfectly on tablets and mobile devices
+- Touch-optimized interface
+
+## 🎯 Testing Workflow
+1. **Create Project**: Test project creation
+2. **Write Content**: Type 150+ words to unlock AI
+3. **Test AI Tools**: Try all AI features
+4. **Upload Files**: Test file management
+5. **Export Reports**: Test PDF export
+6. **Analytics**: Check dashboard insights
+
+## ⚡ One-Click Access
+The jury credentials are pre-configured for immediate access. No registration required!
+
+---
+
+**For detailed technical documentation, see README.md**
