@@ -8,7 +8,7 @@ import Underline from '@tiptap/extension-underline';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { useEffect } from 'react';
-import { Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Heading1, Heading2 } from 'lucide-react';
+import { Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo, Heading1, Heading2 } from 'lucide-react';
 
 interface EditorProps {
   content: string;
@@ -71,7 +71,7 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
           } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Bold (Ctrl+B)"
         >
-          <Bold className="w-4 h-4" />
+          <BoldIcon className="w-4 h-4" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -81,7 +81,7 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
           } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Italic (Ctrl+I)"
         >
-          <Italic className="w-4 h-4" />
+          <ItalicIcon className="w-4 h-4" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -91,7 +91,7 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
           } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Underline (Ctrl+U)"
         >
-          <Underline className="w-4 h-4" />
+          <UnderlineIcon className="w-4 h-4" />
         </button>
         <div className="w-px h-6 bg-border mx-1" />
         <button

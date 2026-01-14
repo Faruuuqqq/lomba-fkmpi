@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
+import { AdvancedAIController } from './advanced-ai.controller';
+import { AdvancedAIService } from './advanced-ai.service';
 
 @Module({
-  controllers: [AiController],
-  providers: [AiService],
-  exports: [AiService],
+  imports: [HttpModule],
+  controllers: [AiController, AdvancedAIController],
+  providers: [AiService, AdvancedAIService],
+  exports: [AiService, AdvancedAIService],
 })
 export class AiModule {}

@@ -47,3 +47,37 @@ export interface SaveResponse {
   wordsToUnlock: number;
   project: Project;
 }
+
+export interface ReasoningNode {
+  id: string;
+  type: 'premise' | 'evidence' | 'conclusion';
+  label: string;
+  position: { x: number; y: number };
+}
+
+export interface ReasoningEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  hasFallacy: boolean;
+}
+
+export interface ReasoningMap {
+  nodes: ReasoningNode[];
+  edges: ReasoningEdge[];
+  analysis: string;
+  timestamp: string;
+}
+
+export interface EthicsIssue {
+  sentence: string;
+  type: string;
+  explanation: string;
+}
+
+export interface EthicsCheck {
+  issues: EthicsIssue[];
+  summary: string;
+  timestamp: string;
+}

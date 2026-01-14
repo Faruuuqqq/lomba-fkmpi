@@ -2,6 +2,67 @@
 
 MITRA-AI adalah platform penulisan akademik berbasis web yang memaksa mahasiswa untuk melakukan inisiasi pemikiran mandiri sebelum berkolaborasi dengan AI.
 
+---
+
+## 🏆 Juri Access
+
+### Quick Access Credentials
+- **Email**: `demo@gmail.com`
+- **Password**: `demo123`
+- **Role**: Demo User (Full feature access)
+
+### 🚀 How to Access
+1. Visit the login page at `http://localhost:3000/login`
+2. Click the **"🚀 Use Juri Credentials"** button at the top
+3. Credentials will be automatically filled in the form
+4. Click **"Sign In"** to enter the dashboard
+
+### ✅ Available Features for Testing
+- **📝 Smart Editor**: Rich text editor with paste protection
+- **🤖 AI Lock System**: AI unlocks after 150 words
+- **💬 Socratic AI Tutor**: Question-based AI assistance
+- **📊 Word Count Tracking**: Real-time progress monitoring
+- **📁 File Upload System**: Upload images and documents
+- **😈 Devil's Advocate Mode**: Challenge your arguments
+- **✅ Grammar Checker**: Improve writing quality
+- **🛡️ Plagiarism Detection**: Ensure academic integrity
+- **📚 Citation Suggestions**: Find relevant academic sources
+- **📈 Analytics Dashboard**: Track usage and performance
+- **📱 Mobile-Responsive**: Works on all devices
+- **📄 Export Functionality**: Download complete reports
+
+#---
+
+## 🔐 Authentication System
+
+### Login vs Register
+
+#### **Login Flow**
+- **Purpose**: Access existing account
+- **Process**: Email + password validation
+- **Security**: JWT token generation, account lockout protection
+- **Features**: Rate limiting, failed attempt tracking, reCAPTCHA support
+
+#### **Register Flow**
+- **Purpose**: Create new user account
+- **Process**: Email + password + optional name
+- **Validation**: Email uniqueness, password strength
+- **Security**: Password hashing, input sanitization
+
+### User Roles
+- **USER**: Standard user with full feature access
+- **ADMIN**: Administrative access to management dashboard
+- **Juri Demo**: Special demo account (demo@gmail.com) for judges
+
+### Security Features Implemented
+- **Rate Limiting**: 5 attempts per 5 minutes per IP
+- **Account Lockout**: Progressive lockout (15min → 60min)
+- **Password Security**: bcrypt hashing with 10 salt rounds
+- **Input Validation**: Anti-SQL injection, XSS protection
+- **Bot Detection**: Google reCAPTCHA v2 integration
+
+---
+
 ## Fitur Utama
 
 - **Smart Editor**: Editor teks dengan Tiptap yang mencegah copy-paste (>20 kata) di fase awal

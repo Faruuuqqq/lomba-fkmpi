@@ -10,7 +10,15 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  // Try localStorage first, then cookies
+  let token = localStorage.getItem('token');
+  if (!token) {
+    const cookies = document.cookie.split(';');
+    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+    if (tokenCookie) {
+      token = tokenCookie.split('=')[1];
+    }
+  }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -41,6 +49,18 @@ export const aiAPI = {
   analyze: (projectId: string, currentText: string, userQuery: string) =>
     api.post('/ai/analyze', { projectId, currentText, userQuery }),
   getChatHistory: (projectId: string) => api.get(`/ai/chat-history/${projectId}`),
+  generateMap: (projectId: string, text: string) =>
+    api.post('/ai/generate-map', { projectId, text }),
+  ethicsCheck: (projectId: string, text: string) =>
+    api.post('/ai/ethics-check', { projectId, text }),
+};
+
+export const analyticsAPI = {
+  logUsage: (data: { userId?: string; feature: string; duration: number; metadata?: any }) =>
+    api.post('/analytics/log', data),
+  getOverview: () => api.get('/analytics/overview'),
+  getDailyStats: (days?: number) => api.get(`/analytics/daily-stats?days=${days || 30}`),
+  getPerformance: (feature?: string) => api.get(`/analytics/performance${feature ? `?feature=${feature}` : ''}`),
 };
 
 export default api;

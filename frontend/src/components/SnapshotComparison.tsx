@@ -179,7 +179,7 @@ export function SnapshotComparison({ projectId, snapshots }: SnapshotComparisonP
                   Compare Version {compareIndex + 1}
                 </Badge>
                 <div className="text-sm text-muted-foreground mt-1">
-                  {new Date(compareSnapshot.timestamp).toLocaleString()}
+                  {compareSnapshot && new Date(compareSnapshot.timestamp).toLocaleString()}
                 </div>
               </div>
               <Button onClick={compareNext} disabled={compareIndex === snapshots.length - 1} variant="outline" size="sm">
@@ -192,11 +192,11 @@ export function SnapshotComparison({ projectId, snapshots }: SnapshotComparisonP
               <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
                 <h4 className="font-medium mb-2">Compare Version {compareIndex + 1}</h4>
                 <div className="whitespace-pre-wrap text-sm leading-relaxed max-h-80 overflow-y-auto">
-                  {compareSnapshot.content || 'Empty content'}
+                  {compareSnapshot?.content || 'Empty content'}
                 </div>
                 <div className="mt-3 pt-3 border-t text-xs text-muted-foreground">
-                  Stage: {compareSnapshot.stage} • 
-                  {compareSnapshot.content.trim().split(/\s+/).length} words
+                  Stage: {compareSnapshot?.stage || 'N/A'} • 
+                  {compareSnapshot?.content?.trim().split(/\s+/).length || 0} words
                 </div>
               </div>
             </CardContent>

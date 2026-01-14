@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, AuthResponse } from '@/types';
 import { authAPI } from '@/lib/api';
-import Cookies from 'js-cookie';
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = Cookies.get('token');
+    const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
       fetchProfile(storedToken);
@@ -37,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data } = await authAPI.getProfile();
       setUser(data);
     } catch (error) {
-      Cookies.remove('token');
+      localStorage.removeItem('token');
       setToken(null);
       setUser(null);
     } finally {
@@ -49,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data }: { data: AuthResponse } = await authAPI.login({ email, password });
     setToken(data.token);
     setUser(data.user);
-    Cookies.set('token', data.token, { expires: 7 });
+    localStorage.setItem('token', data.token);
   };
 
   const register = async (email: string, password: string, name?: string) => {
@@ -60,11 +59,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     setToken(data.token);
     setUser(data.user);
-    Cookies.set('token', data.token, { expires: 7 });
+    localStorage.setItem('token', data.token);
   };
 
   const logout = () => {
-    Cookies.remove('token');
+    localStorage.removeItem('token');
     setToken(null);
     setUser(null);
   };

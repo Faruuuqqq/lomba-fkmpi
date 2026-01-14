@@ -12,9 +12,12 @@ model User {
   email     String    @unique
   password  String
   name      String?
+  role      String    @default("USER")
+  isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   projects  Project[]
+  mediaFiles MediaFile[]
 }
 
 model Project {
@@ -31,6 +34,8 @@ model Project {
   user         User               @relation(fields: [userId], references: [id])
   snapshots    ProjectSnapshot[]
   aiChats      AiInteraction[]
+  reasoningLogs ReasoningLog[]
+  mediaFiles   MediaFile[]
 }
 
 model ProjectSnapshot {
@@ -49,4 +54,71 @@ model AiInteraction {
   timestamp   DateTime @default(now())
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id])
+}
+
+model ReasoningLog {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  graphData   Json
+  analysis    String   @db.Text
+  timestamp   DateTime @default(now())
+}
+
+model AnalyticsLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  feature   String
+  duration  Int
+  timestamp DateTime @default(now())
+  metadata  Json?
+}
+
+model RateLimit {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  count     Int      @default(0)
+  resetTime DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("rate_limits")
+}
+
+model FailedLoginAttempt {
+  id        String   @id @default(uuid())
+  email     String
+  ipAddress String
+  userAgent String?
+  timestamp DateTime @default(now())
+  
+  @@map("failed_login_attempts")
+}
+
+model AccountLockout {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  lockReason String
+  lockedAt   DateTime @default(now())
+  lockedUntil DateTime
+  attempts   Int      @default(0)
+  isActive   Boolean  @default(true)
+  
+  @@map("account_lockouts")
+}
+
+model MediaFile {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  projectId    String?
+  userId       String
+  uploadedAt   DateTime @default(now())
+  project      Project? @relation(fields: [projectId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+  
+  @@map("media_files")
 }
