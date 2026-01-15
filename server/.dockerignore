@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Testing
+coverage/
+.nyc_output/
+*.test.js
+*.spec.ts
+test/
+tests/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+.next/
+out/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Misc
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Prisma (optional, but good practice)
+prisma/migrations/
+!prisma/schema.prisma
