@@ -11,7 +11,7 @@ import {
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { AdminService } from './admin.service';
 import { User } from '../auth/decorators/user.decorator';

@@ -3,7 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/test'],
   testMatch: ['**/*.spec.ts'],
-  collectCoverageFrom: ['src'],
+  collectCoverageFrom: ['<rootDir>/src'],
   coverageDirectory: 'coverage',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -22,5 +22,12 @@ module.exports = {
     '<rootDir>/tests/e2e/',
     '<rootDir>/tests/helpers/',
     '<rootDir>/frontend/'
+  ],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '<rootDir>/test/',
+    '<rootDir>/tests/',
+    '<rootDir>/frontend/',
   ],
 };
