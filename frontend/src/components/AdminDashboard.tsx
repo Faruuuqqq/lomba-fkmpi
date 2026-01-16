@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  ChartBarIcon, 
-  UsersIcon, 
-  DocumentTextIcon, 
-  CogIcon,
-  ChartPieIcon,
-  LightningBoltIcon
-} from '@heroicons/react/outline';
+  BarChart3, 
+  Users, 
+  FileText, 
+  Settings, 
+  TrendingUp
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardStats {
@@ -185,10 +184,10 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: ChartPieIcon },
+    { id: 'dashboard', name: 'Dashboard', icon: PieChart },
     { id: 'users', name: 'Users', icon: UsersIcon },
     { id: 'projects', name: 'Projects', icon: DocumentTextIcon },
-    { id: 'analytics', name: 'Analytics', icon: ChartBarIcon },
+    { id: 'analytics', name: 'Analytics', icon: BarChart3 },
     { id: 'settings', name: 'Settings', icon: CogIcon },
   ];
 
