@@ -171,7 +171,7 @@ export class AuthController {
   private validateLoginAttempt(dto: LoginDto): void {
     // Check for SQL injection patterns
     const sqlPatterns = [
-      /('|(\\-\\-)|(;)|(\\||\\|)|(\\*|\\*)/,
+      /'(--)|(;)|(\|\|)|(\*\*)/,
       /(exec|insert|select|delete|update|count|drop|union|create|alter)/i
     ];
     
@@ -212,6 +212,6 @@ export class AuthController {
     }
     
     // This would be implemented later
-    throw new TooManyRequestsException('reCAPTCHA verification not yet implemented');
+    throw new ForbiddenException('reCAPTCHA verification not yet implemented');
   }
 }

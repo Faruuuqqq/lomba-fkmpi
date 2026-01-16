@@ -40,7 +40,11 @@ export class AuthService {
 
     const token = this.generateToken(user.id);
 
-    return { user, token };
+    return { 
+      user,
+      token,
+      message: 'User registered successfully'
+    };
   }
 
   async login(dto: LoginDto, request?: any) {
@@ -87,7 +91,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
       },
-      token,
+      access_token: token,
     };
   }
 

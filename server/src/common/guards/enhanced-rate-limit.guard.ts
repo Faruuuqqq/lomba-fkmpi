@@ -1,7 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, throwError, from } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service';
 
 interface RateLimitOptions {
@@ -35,45 +35,47 @@ export class EnhancedRateLimitGuard implements NestInterceptor {
     
     const key = this.generateKey(request, options);
     
-    return this.checkRateLimit(key, options).then(rateLimitResult => {
-      if (!rateLimitResult.allowed) {
-        this.logger.warn(`Rate limit exceeded for key: ${key}`);
+    return from(this.checkRateLimit(key, options)).pipe(
+      switchMap(rateLimitResult => {
+        if (!rateLimitResult.allowed) {
+          this.logger.warn(`Rate limit exceeded for key: ${key}`);
+          
+          // Set rate limit headers
+          response.set({
+            'X-RateLimit-Limit': options.maxAttempts,
+            'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining),
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
+            'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          });
+          
+          throw {
+            statusCode: 429,
+            message: isLoginEndpoint 
+              ? 'Too many login attempts. Please try again in a few minutes.'
+              : 'Too many requests. Please slow down.',
+            error: 'Too Many Requests',
+            retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          };
+        }
         
-        // Set rate limit headers
+        // Set rate limit headers for successful requests
         response.set({
           'X-RateLimit-Limit': options.maxAttempts,
-          'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining),
+          'X-RateLimit-Remaining': rateLimitResult.remaining,
           'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
-          'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
         });
         
-        throw {
-          statusCode: 429,
-          message: isLoginEndpoint 
-            ? 'Too many login attempts. Please try again in a few minutes.'
-            : 'Too many requests. Please slow down.',
-          error: 'Too Many Requests',
-          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-        };
-      }
-      
-      // Set rate limit headers for successful requests
-      response.set({
-        'X-RateLimit-Limit': options.maxAttempts,
-        'X-RateLimit-Remaining': rateLimitResult.remaining,
-        'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString(),
-      });
-      
-      return next.handle().pipe(
-        catchError(error => {
-          // Only count rate limit on authentication failures for login endpoint
-          if (isLoginEndpoint && (error.status === 401 || error.response?.status === 401)) {
-            this.recordFailedAttempt(key, options);
-          }
-          throw error;
-        })
-      );
-    });
+        return next.handle().pipe(
+          catchError(error => {
+            // Only count rate limit on authentication failures for login endpoint
+            if (isLoginEndpoint && (error.status === 401 || error.response?.status === 401)) {
+              this.recordFailedAttempt(key, options);
+            }
+            throw error;
+          })
+        );
+      })
+    );
   }
 
   private async checkRateLimit(key: string, options: RateLimitOptions): Promise<{
