@@ -34,7 +34,7 @@ export default function ProjectPage() {
   const [wordCount, setWordCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   // Chat history for AI features
   const [chatHistory, setChatHistory] = useState<any[]>([]);
@@ -54,23 +54,19 @@ export default function ProjectPage() {
   useEffect(() => {
     if (!id || !isAuthenticated) return;
     
-    const fetchProject = async () => {
-      try {
-        const projectData = await projectsAPI.getById(id as string);
-        setProject(projectData);
-        setContent(projectData.content || '');
-        setWordCount(projectData.wordCount || 0);
-        
-        // Fetch chat history
-        const history = await aiAPI.getChatHistory(id as string);
-        setChatHistory(history);
-      } catch (error) {
-        console.error('Failed to fetch project:', error);
-        router.push('/dashboard');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchProject = async () => {
+    try {
+      const response = await projectsAPI.getOne(id as string);
+      const projectData = response.data;
+      setProject(projectData);
+      setContent(projectData.content || '');
+      setWordCount(projectData.wordCount || 0);
+    } catch (error) {
+      console.error('Failed to load project:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
     fetchProject();
   }, [id, isAuthenticated]);
