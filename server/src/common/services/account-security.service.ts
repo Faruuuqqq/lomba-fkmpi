@@ -323,7 +323,6 @@ export class AccountSecurityService {
             gte: oneHourAgo,
           },
         },
-      },
       });
 
       if (recentAttemptsFromIp > 20) {
@@ -357,7 +356,6 @@ export class AccountSecurityService {
             gte: oneHourAgo,
           },
         },
-      },
       });
 
       if (recentAttemptsFromUA > 15) {

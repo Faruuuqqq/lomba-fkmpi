@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Editor } from '@/components/Editor';
 import { AiSidebar } from '@/components/AiSidebar';
@@ -72,14 +72,14 @@ export default function ProjectPage() {
 
   const startInactivityTimer = () => {
     clearTimeout(inactivityTimeoutRef.current);
-    inactivityRef.current = setTimeout(() => {
+    inactivityTimeoutRef.current = setTimeout(() => {
       handleAutoSave();
     }, 60000);
   };
 
-  const resetInactivityTimer = () => {
-    clearTimeout(inactivityTimeoutRef.current);
-  };
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimeoutRef.current);
+    };
 
   // Progress states
   const [saveProgress, setSaveProgress] = useState(0);
@@ -215,7 +215,7 @@ export default function ProjectPage() {
     }
 
     // Ctrl+Shift+R for "Restart"
-    if (key === 'R' && (event.ctrlKey || event.metaKey) && event.shiftKey)) {
+    if (key === 'R' && (event.ctrlKey || event.metaKey) && event.shiftKey) {
       event.preventDefault();
       if (content && content !== displayContent && project) {
         // Clear content
@@ -244,108 +244,7 @@ export default function ProjectPage() {
       event.preventDefault();
       router.push('/dashboard');
     }
-  }, [focusedElement, handleKeyDown]);
-
-    const handleExitConfirmation = () => {
-    if (!showExitConfirmation) {
-      return;
-    }
-
-    const cleanup = () => {
-      resetInactivityTimer();
-      clearTimeout(exitTimeoutRef.current);
-    };
-
-  // Show exit confirmation for unsaved changes
-    const showExitConfirmation = () => {
-      return window.confirm('You have unsaved changes. Continue? All unsaved changes will be lost.');
-    };
-
-  // Handle before page unload
-    useEffect(() => {
-      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-        if (!showExitConfirmation) {
-          return;
-        }
-        event.preventDefault();
-        
-        cleanup();
-      };
-
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-      };
-    }, []);
-
-    // Focus trap for assistive technology
-    const startInactivityTimer = () => {
-    clearTimeout(inactivityTimeoutRef.current);
-    inactivityTimeoutRef.current = setTimeout(() => {
-      enhancedSave();
-    }, 60000); // 1 minute
-
-    const resetInactivityTimer = () => {
-      clearTimeout(inactivityRef.current);
-    };
-
-    // Auto-save with progress bar
-    const enhancedSaveWithProgress = async () => {
-    if (!project) return;
-
-    setIsSaving(true);
-    setSaveProgress(10);
-      
-      try {
-        const response = await projectsAPI.save(id!, content);
-        
-        setSaveProgress(25);
-        setSaveProgress(50);
-        
-        // Continue progress updates
-        setSaveProgress(75);
-        setSaveProgress(90);
-        
-        setSaveProgress(95);
-        setSaveProgress(100);
-        
-        const response = await projectsAPI.save(id!, content);
-        
-        setSaveProgress(100);
-        setDisplayContent(content);
-        setLastSaved(new Date());
-        setSaveStatus('saved');
-        
-        setProject(prev => ({
-          ...prev!,
-          content,
-          wordCount: content.split(/\s+/).filter(word => word.length > 0).length,
-          updatedAt: new Date()
-        }));
-        
-        setSaveProgress(100);
-        return true;
-      } catch (error) {
-        setSaveStatus('error');
-        setSaveProgress(0);
-      
-        if (displayContent && content !== displayContent) {
-          setDisplayContent(displayContent);
-        }
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    return {
-      handleAutoSaveWithProgress,
-      handleSave,
-      showExitConfirmation,
-      cleanup,
-      startInactivityTimer,
-      resetInactivityTimer
-    };
-  }, [debouncedContent, project, autoSaveTimeoutRef, inactivityTimeoutRef, exitTimeoutRef, focusedElement, handleKeyDown]);
+  }, [content, displayContent, project]);
 
   // Show success confirmation
   const showSuccessNotification = (message: string) => {
@@ -369,7 +268,7 @@ export default function ProjectPage() {
           if (notification.parentNode) {
             notification.parentNode.removeChild(notification);
           }
-        }, 3000);
+        }, 300);
     }, 3000);
 
     return () => {

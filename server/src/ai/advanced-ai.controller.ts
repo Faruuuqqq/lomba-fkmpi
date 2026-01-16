@@ -1,7 +1,7 @@
-import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdvancedAIService } from './advanced-ai.service';
-import { User } from '../auth/decorators/user.decorator';
+import { User } from '../common/decorators/current-user.decorator';
 
 @Controller('ai/advanced')
 @UseGuards(JwtAuthGuard)

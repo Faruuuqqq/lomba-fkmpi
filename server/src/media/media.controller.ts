@@ -12,9 +12,9 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { MediaService } from '../common/services/media.service';
-import { User } from '../auth/decorators/user.decorator';
+import { User } from '../common/decorators/current-user.decorator';
 
 @Controller('media')
 @UseGuards(JwtAuthGuard)
