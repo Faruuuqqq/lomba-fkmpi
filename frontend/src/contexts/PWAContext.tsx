@@ -1,92 +1,122 @@
 'use client';
 
-import { createContext, useContext, React, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 interface PWAState {
   isInstallable: boolean;
   isInstalled: boolean;
   isOnline: boolean;
   swRegistration: ServiceWorkerRegistration | null;
-  isOnline: boolean;
   offlineQueue: any[];
 }
 
-const PWAContext = createContext<PWAState | null>(null);
-
-interface PWAProviderProps {
-  children: React.ReactNode;
+interface PWAContextType {
+  isInstallable: boolean;
+  isInstalled: boolean;
+  isOnline: boolean;
+  swRegistration: ServiceWorkerRegistration | null;
+  offlineQueue: any[];
+  addToOfflineQueue: (action: any) => void;
+  clearOfflineQueue: () => void;
 }
 
-export function PWAProvider({ children }: PWAProviderProps) {
-  const [isInstallable, setIsInstallable] = React.useState(false);
-  const [isInstalled, setIsInstalled] = React.useState(false);
-  const [isOnline, setIsOnline] = React.useState(true);
-  const [swRegistration, setSwRegistration] = React.useState<ServiceWorkerRegistration | null>(null);
-  const [offlineQueue, setOfflineQueue] = React.useState<any[]>([]);
+const PWAContext = createContext<PWAContextType | null>(null);
 
-  // Check if PWA is installable
-  React.useEffect(() => {
-    setIsInstallable(
-      'serviceWorker' in navigator && 
-      'PushManager' in (window as any).serviceWorker &&
-      window.matchMedia('(display-mode: standalone)').matches === false
-    );
-  }, []);
+export function usePWA(): PWAContextType {
+  const context = useContext(PWAContext);
+  if (!context) {
+    throw new Error('usePWA must be used within a PWAProvider');
+  }
+  return context;
+}
 
-  // Check if PWA is installed
-  React.useEffect(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isInWebAppiOS = (window.navigator as any).standalone === true;
-    const isInstalled = isStandalone || isInWebAppiOS;
-    setIsInstalled(isInstalled);
-  }, []);
+export function PWAProvider({ children }: { children: React.ReactNode }) {
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [offlineQueue, setOfflineQueue] = useState<any[]>([]);
 
-  // Network status
-  React.useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+  useEffect(() => {
+    // Check if app is installable
+    if ('beforeinstallprompt' in window) {
+      setIsInstallable(true);
+    }
+
+    // Check if app is installed
+    const isStandalone = (window.navigator as any).standalone || 
+                        window.matchMedia('(display-mode: standalone)').matches;
+    setIsInstalled(isStandalone);
+
+    // Check online status
+    const updateOnlineStatus = () => setIsOnline(navigator.onLine);
     
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    setIsOnline(navigator.onLine);
-
+    updateOnlineStatus();
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
     };
   }, []);
 
-  // Service Worker registration
-  React.useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then((registration) => {
-        setSwRegistration(registration);
-      console.log('Service Worker registered:', registration);
-      });
-
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        navigator.serviceWorker.ready.then((registration) => {
+  useEffect(() => {
+    // Register service worker
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
           setSwRegistration(registration);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
         });
+    }
+  }, []);
+
+  useEffect(() => {
+    // Handle beforeinstallprompt
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Sync offline queue when online
+    if (isOnline && offlineQueue.length > 0) {
+      const queue = [...offlineQueue];
+      setOfflineQueue([]);
+      
+      queue.forEach(item => {
+        // Process queued items
+        console.log('Processing offline queue item:', item);
       });
     }
-  }, []);
+  }, [isOnline, offlineQueue]);
 
-  // Offline queue management
-  React.useEffect(() => {
-    const savedQueue = localStorage.getItem('offlineQueue');
-    if (savedQueue) {
-      setOfflineQueue(JSON.parse(savedQueue));
-    }
-  }, []);
+  const addToOfflineQueue = (action: any) => {
+    setOfflineQueue(prev => [...prev, action]);
+  };
 
-  const value = {
+  const clearOfflineQueue = () => {
+    setOfflineQueue([]);
+  };
+
+  const value: PWAContextType = {
     isInstallable,
     isInstalled,
     isOnline,
     swRegistration,
-    isOnline,
-    offlineQueue
+    offlineQueue,
+    addToOfflineQueue,
+    clearOfflineQueue,
   };
 
   return (
@@ -94,12 +124,4 @@ export function PWAProvider({ children }: PWAProviderProps) {
       {children}
     </PWAContext.Provider>
   );
-}
-
-export function usePWA() {
-  const context = useContext(PWAContext);
-  if (!context) {
-    throw new Error('usePWA must be used within a PWAProvider');
-  }
-  return context;
 }
