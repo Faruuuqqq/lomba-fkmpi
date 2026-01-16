@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ClientProviders } from '@/components/ClientProviders'
@@ -10,8 +10,21 @@ export const metadata: Metadata = {
   description: 'AI-powered academic writing platform that encourages critical thinking',
   keywords: ['AI', 'academic writing', 'research', 'critical thinking', 'education'],
   authors: [{ name: 'MITRA AI Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'MITRA AI',
+  },
+  icons: {
+    apple: '/icon-192x192.png',
+  },
+};
+
+export const viewport: Viewport = {
   themeColor: '#1f2937',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -21,14 +34,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      </head>
       <body className={inter.className}>
         <ClientProviders>
           {children}
