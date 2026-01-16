@@ -262,7 +262,8 @@ export default function CitationSuggestions({
                           rel="noopener noreferrer"
                           className="flex items-center text-sm text-blue-600 hover:text-blue-800"
                         >
-                          📖 View Source
+                          <Link className="h-4 w-4 mr-1" />
+                          View Source
                         </a>
                     )}
                   </div>
