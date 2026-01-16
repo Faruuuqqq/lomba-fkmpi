@@ -8,7 +8,7 @@ import { Editor } from '@/components/Editor';
 import { AiSidebar } from '@/components/AiSidebar';
 import { projectsAPI, aiAPI } from '@/lib/api';
 import { Project, AiInteraction } from '@/types';
-import { Save, Menu, X, FileText, BarChart2, BookOpen } from 'lucide-react';
+import { Save, Menu, X, FileText, BarChart2, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 
@@ -25,6 +25,7 @@ export default function ProjectPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [wasAiLocked, setWasAiLocked] = useState(true);
+  const [isZenMode, setIsZenMode] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -94,6 +95,18 @@ export default function ProjectPage() {
     }
   }, [content, wasAiLocked]);
 
+  // Keyboard shortcut: Esc to exit Zen Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isZenMode) {
+        setIsZenMode(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isZenMode]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
@@ -123,94 +136,106 @@ export default function ProjectPage() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      {/* LEFT: Navigation Sidebar (Collapsible) - Hidden on mobile */}
-      <aside className="hidden md:flex w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex-col">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
-              <BookOpen className="w-5 h-5 text-white" />
+      {/* LEFT: Navigation Sidebar (Collapsible) - Hidden on mobile and in Zen Mode */}
+      {!isZenMode && (
+        <aside className="hidden md:flex w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex-col">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="font-bold text-lg bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                NALAR.AI
+              </h1>
             </div>
-            <h1 className="font-bold text-lg bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              NALAR.AI
-            </h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/dashboard')}
+              className="w-full"
+            >
+              ← Back to Dashboard
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push('/dashboard')}
-            className="w-full"
-          >
-            ← Back to Dashboard
-          </Button>
-        </div>
 
-        <div className="flex-1 p-4 overflow-y-auto">
-          <div className="space-y-2">
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 rounded-lg">
-              <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2 truncate">
-                {project.title}
-              </h3>
-              <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
-                <div className="flex justify-between">
-                  <span>Words:</span>
-                  <span className="font-medium text-indigo-600 dark:text-indigo-400">{wordCount}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Status:</span>
-                  <span className="font-medium">{project.status}</span>
+          <div className="flex-1 p-4 overflow-y-auto">
+            <div className="space-y-2">
+              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 rounded-lg">
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2 truncate">
+                  {project.title}
+                </h3>
+                <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Words:</span>
+                    <span className="font-medium text-indigo-600 dark:text-indigo-400">{wordCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Status:</span>
+                    <span className="font-medium">{project.status}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            {lastSaved ? (
-              <p>Saved {lastSaved.toLocaleTimeString()}</p>
-            ) : (
-              <p>Not saved yet</p>
-            )}
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {lastSaved ? (
+                <p>Saved {lastSaved.toLocaleTimeString()}</p>
+              ) : (
+                <p>Not saved yet</p>
+              )}
+            </div>
           </div>
-        </div>
-      </aside>
+        </aside>
+      )}
 
       {/* CENTER: Editor Canvas */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Toolbar */}
-        <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="md:hidden"
-            >
-              {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
+        {/* Top Toolbar - Hidden in Zen Mode */}
+        {!isZenMode && (
+          <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="md:hidden"
+              >
+                {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
 
-            <div>
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
-                {project.title}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {wordCount} words {isAiUnlocked && '• AI Unlocked'}
-              </p>
+              <div>
+                <h2 className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
+                  {project.title}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {wordCount} words {isAiUnlocked && '• AI Unlocked'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setIsZenMode(!isZenMode)}
+                variant="ghost"
+                size="sm"
+                title={isZenMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+              >
+                {isZenMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                size="sm"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              size="sm"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-        </div>
+        )}
 
         {/* Editor Area */}
         <Editor
@@ -220,22 +245,49 @@ export default function ProjectPage() {
         />
       </main>
 
-      {/* RIGHT: AI Sidebar (Collapsible) */}
-      <aside className={`
-        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
-        fixed md:relative right-0 top-0 h-full w-80 md:w-96 z-50
-        transition-transform duration-300 ease-in-out
-        md:translate-x-0
-      `}>
-        <AiSidebar
-          projectId={id as string}
-          isLocked={!isAiUnlocked}
-          wordCount={wordCount}
-          wordsToUnlock={wordsToUnlock}
-          chatHistory={chatHistory}
-          onNewChat={handleNewChat}
-        />
-      </aside>
+      {/* RIGHT: AI Sidebar (Collapsible) - Hidden in Zen Mode */}
+      {!isZenMode && (
+        <aside className={`
+          ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+          fixed md:relative right-0 top-0 h-full w-80 md:w-96 z-50
+          transition-transform duration-300 ease-in-out
+          md:translate-x-0
+        `}>
+          <AiSidebar
+            projectId={id as string}
+            isLocked={!isAiUnlocked}
+            wordCount={wordCount}
+            wordsToUnlock={wordsToUnlock}
+            chatHistory={chatHistory}
+            onNewChat={handleNewChat}
+          />
+        </aside>
+      )}
+
+      {/* Floating Zen Mode Exit Button */}
+      {isZenMode && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            size="sm"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+          <Button
+            onClick={() => setIsZenMode(false)}
+            variant="outline"
+            size="sm"
+            className="shadow-lg bg-white dark:bg-slate-900"
+            title="Exit Focus Mode (Esc)"
+          >
+            <Minimize2 className="w-4 h-4 mr-2" />
+            Exit Focus
+          </Button>
+        </div>
+      )}
 
       {/* Mobile Overlay */}
       {isSidebarOpen && (
