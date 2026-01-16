@@ -8,7 +8,7 @@ export interface User {
 
 export interface AuthResponse {
   user: User;
-  token: string;
+  access_token: string;
 }
 
 export interface Project {
