@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useFocusManagement() {
   const [focusedElement, setFocusedElement] = useState<HTMLElement | null>(null);

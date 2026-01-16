@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Editor } from '@/components/Editor';
 import { AiSidebar } from '@/components/AiSidebar';
@@ -268,8 +268,7 @@ export default function ProjectPage() {
           if (notification.parentNode) {
             notification.parentNode.removeChild(notification);
           }
-        }, 300);
-    }, 3000);
+        }, 3000);
 
     return () => {
       notification.remove();
