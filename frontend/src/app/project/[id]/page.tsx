@@ -4,15 +4,24 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Editor } from '@/components/Editor';
+import { AiSidebar } from '@/components/AiSidebar';
+import { projectsAPI, aiAPI } from '@/lib/api';
+import { Project, AiInteraction } from '@/types';
+import { Save, Menu, X, FileText, BarChart2, BookOpen } from 'lucide-react';
 
 export default function ProjectPage() {
   const { id } = useParams();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  
-  const [project, setProject] = useState<any>(null);
+
+  const [project, setProject] = useState<Project | null>(null);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [chatHistory, setChatHistory] = useState<AiInteraction[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -20,94 +29,191 @@ export default function ProjectPage() {
       return;
     }
 
-    // Load project data
-    fetch(`/api/projects/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setProject(data);
-        setContent(data.content || '');
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('Failed to load project:', error);
-        setIsLoading(false);
-      });
+    loadProject();
   }, [id, isAuthenticated, router]);
+
+  const loadProject = async () => {
+    try {
+      const { data } = await projectsAPI.getOne(id as string);
+      setProject(data);
+      setContent(data.content || '');
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Failed to load project:', error);
+      setIsLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!project) return;
-    
+
+    setIsSaving(true);
     try {
-      const response = await fetch(`/api/projects/${id}/save`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setProject((prev: any) => ({
-          ...prev,
-          content,
-          wordCount: content.split(/\s+/).length,
-          updatedAt: new Date().toISOString(),
-        }));
-      }
+      const { data } = await projectsAPI.save(id as string, content);
+      setProject(data);
+      setLastSaved(new Date());
     } catch (error) {
       console.error('Failed to save project:', error);
+      alert('Failed to save project');
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleNewChat = (interaction: AiInteraction) => {
+    setChatHistory([...chatHistory, interaction]);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div>Loading...</div>
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Loading project...</p>
+        </div>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div>Project not found</div>
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <FileText className="w-16 h-16 mx-auto mb-4 text-slate-400" />
+          <h2 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-100">Project not found</h2>
+          <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
+        </div>
       </div>
     );
   }
 
+  const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
+  const isAiUnlocked = wordCount >= 150;
+  const wordsToUnlock = Math.max(0, 150 - wordCount);
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">{project.title}</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <textarea
-              className="w-full min-h-[500px] p-4 border rounded-lg"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Start writing your paper..."
-            />
-            <div className="mt-4 flex justify-between">
-              <Button onClick={handleSave} className="flex items-center gap-2">
-                <span>Save</span>
-                <span className="text-sm text-muted-foreground">
-                  ({content.split(/\s+/).length} words)
-                </span>
-              </Button>
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+      {/* LEFT: Navigation Sidebar (Collapsible) - Hidden on mobile */}
+      <aside className="hidden md:flex w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex-col">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="font-bold text-lg bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              NALAR.AI
+            </h1>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/dashboard')}
+            className="w-full"
+          >
+            ← Back to Dashboard
+          </Button>
+        </div>
+
+        <div className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-2">
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 rounded-lg">
+              <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2 truncate">
+                {project.title}
+              </h3>
+              <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                <div className="flex justify-between">
+                  <span>Words:</span>
+                  <span className="font-medium text-indigo-600 dark:text-indigo-400">{wordCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <span className="font-medium">{project.status}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">AI Assistant</h3>
-            <p className="text-sm text-muted-foreground">
-              Get AI-powered suggestions for your writing
-            </p>
-            <Button className="w-full">
-              Get Suggestions
+        </div>
+
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            {lastSaved ? (
+              <p>Saved {lastSaved.toLocaleTimeString()}</p>
+            ) : (
+              <p>Not saved yet</p>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* CENTER: Editor Canvas */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Toolbar */}
+        <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="md:hidden"
+            >
+              {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+
+            <div>
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
+                {project.title}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {wordCount} words {isAiUnlocked && '• AI Unlocked'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              size="sm"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </div>
-      </div>
+
+        {/* Editor Area */}
+        <Editor
+          content={content}
+          onUpdate={setContent}
+          isLocked={!isAiUnlocked}
+        />
+      </main>
+
+      {/* RIGHT: AI Sidebar (Collapsible) */}
+      <aside className={`
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+        fixed md:relative right-0 top-0 h-full w-80 md:w-96 z-50
+        transition-transform duration-300 ease-in-out
+        md:translate-x-0
+      `}>
+        <AiSidebar
+          projectId={id as string}
+          isLocked={!isAiUnlocked}
+          wordCount={wordCount}
+          wordsToUnlock={wordsToUnlock}
+          chatHistory={chatHistory}
+          onNewChat={handleNewChat}
+        />
+      </aside>
+
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
