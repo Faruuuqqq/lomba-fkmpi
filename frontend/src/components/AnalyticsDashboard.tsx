@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Clock, TrendingUp, Activity, Smartphone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BarChart3, Clock, TrendingUp, Activity, Smartphone, X } from 'lucide-react';
 
 interface AnalyticsData {
   feature: string;

@@ -184,11 +184,11 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: PieChart },
-    { id: 'users', name: 'Users', icon: UsersIcon },
-    { id: 'projects', name: 'Projects', icon: DocumentTextIcon },
+    { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
+    { id: 'users', name: 'Users', icon: Users },
+    { id: 'projects', name: 'Projects', icon: FileText },
     { id: 'analytics', name: 'Analytics', icon: BarChart3 },
-    { id: 'settings', name: 'Settings', icon: CogIcon },
+    { id: 'settings', name: 'Settings', icon: Settings },
   ];
 
   if (loading && !stats) {
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center">
                   <div className="p-2 bg-indigo-100 rounded-lg">
-                    <DocumentTextIcon className="h-6 w-6 text-indigo-600" />
+                    <FileText className="h-6 w-6 text-indigo-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Projects</p>
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center">
                   <div className="p-2 bg-green-100 rounded-lg">
-                    <UsersIcon className="h-6 w-6 text-green-600" />
+                    <Users className="h-6 w-6 text-green-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Users</p>
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center">
                   <div className="p-2 bg-yellow-100 rounded-lg">
-                    <LightningBoltIcon className="h-6 w-6 text-yellow-600" />
+                    <div className="h-6 w-6 text-yellow-600">!</div>
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Active Projects</p>
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center">
                   <div className="p-2 bg-purple-100 rounded-lg">
-                    <ChartBarIcon className="h-6 w-6 text-purple-600" />
+                    <BarChart3 className="h-6 w-6 text-purple-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Avg Word Count</p>
