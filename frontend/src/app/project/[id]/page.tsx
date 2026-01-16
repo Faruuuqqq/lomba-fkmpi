@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { AiSidebar } from '@/components/AiSidebar';
 import { projectsAPI, aiAPI } from '@/lib/api';
 import { Project, AiInteraction } from '@/types';
 import { Save, Menu, X, FileText, BarChart2, BookOpen } from 'lucide-react';
+import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
 
 export default function ProjectPage() {
   const { id } = useParams();
@@ -22,6 +24,7 @@ export default function ProjectPage() {
   const [chatHistory, setChatHistory] = useState<AiInteraction[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [wasAiLocked, setWasAiLocked] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -52,9 +55,12 @@ export default function ProjectPage() {
       const { data } = await projectsAPI.save(id as string, content);
       setProject(data);
       setLastSaved(new Date());
+      toast.success('Project saved successfully!', {
+        icon: '💾',
+      });
     } catch (error) {
       console.error('Failed to save project:', error);
-      alert('Failed to save project');
+      toast.error('Failed to save project. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -63,6 +69,30 @@ export default function ProjectPage() {
   const handleNewChat = (interaction: AiInteraction) => {
     setChatHistory([...chatHistory, interaction]);
   };
+
+  // Confetti effect when AI unlocks
+  useEffect(() => {
+    const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
+    const isAiUnlocked = wordCount >= 150;
+
+    if (wasAiLocked && isAiUnlocked) {
+      // Trigger confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#6366f1', '#8b5cf6', '#14b8a6'],
+      });
+
+      toast.success('🎉 AI Assistant Unlocked!', {
+        duration: 4000,
+      });
+
+      setWasAiLocked(false);
+    } else if (!isAiUnlocked && !wasAiLocked) {
+      setWasAiLocked(true);
+    }
+  }, [content, wasAiLocked]);
 
   if (isLoading) {
     return (

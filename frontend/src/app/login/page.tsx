@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { BookOpen } from 'lucide-react';
+import { Brain, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -24,18 +25,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError('');
+
     if (!email || !password) {
+      setError('Please fill in all fields');
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       await login(email, password);
       router.push('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -47,76 +50,156 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Login to MITRA AI</CardTitle>
-          </CardHeader>
-          <CardContent>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 dark:from-slate-950 dark:via-indigo-950/20 dark:to-purple-950/10 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl">
+              <Brain className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              NALAR.AI
+            </h1>
+          </div>
+          <p className="text-slate-600 dark:text-slate-400">
+            Welcome back! Sign in to continue writing.
+          </p>
+        </div>
+
+        {/* Login Card */}
+        <Card className="border-slate-200 dark:border-slate-800 shadow-xl">
+          <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email Input */}
               <div>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
+                <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@university.edu"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-12"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
               </div>
+
+              {/* Password Input */}
               <div>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
+                <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 h-12"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
               </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg">
+                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-base font-medium"
                 disabled={isLoading}
               >
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             </form>
-            
-            <div className="mt-4 text-center">
-              <p className="text-sm text-muted-foreground">
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white dark:bg-slate-950 text-slate-500">
+                  or
+                </span>
+              </div>
+            </div>
+
+            {/* Jury Access */}
+            <div className="p-4 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 border border-teal-200 dark:border-teal-900 rounded-xl">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="p-2 bg-teal-600 rounded-lg">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                    Competition Judges
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Quick access for demo and evaluation
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleJuryAccess}
+                variant="outline"
+                className="w-full border-teal-300 dark:border-teal-800 hover:bg-teal-100 dark:hover:bg-teal-900/30"
+                type="button"
+              >
+                Use Demo Account
+              </Button>
+            </div>
+
+            {/* Sign Up Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Don't have an account?{' '}
                 <button
                   type="button"
                   onClick={() => router.push('/register')}
-                  className="text-primary hover:underline"
+                  className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  Sign up
+                  Sign up for free
                 </button>
               </p>
             </div>
-            
-            <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-green-600 rounded-full mb-3">
-                  <span className="text-white text-xl font-bold">🏆</span>
-                </div>
-                <h3 className="text-lg font-bold text-green-900 mb-1">Juri Access</h3>
-                <p className="text-sm text-green-700 mb-3">Quick access for competition judges</p>
-                <Button
-                  onClick={handleJuryAccess}
-                  variant="outline"
-                  className="w-full"
-                  type="button"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Use Jury Account
-                </Button>
-              </div>
-            </div>
           </CardContent>
         </Card>
+
+        {/* Back to Home */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => router.push('/')}
+            className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+          >
+            ← Back to home
+          </button>
+        </div>
       </div>
     </div>
   );
