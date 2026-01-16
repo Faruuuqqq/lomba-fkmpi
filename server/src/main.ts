@@ -9,7 +9,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'https://lomba-fkmpi.vercel.app',
-      'https://lomba-fkmpi-oz54tgtat-faruq-mahdisons-projects.vercel.app',
+      /^https:\/\/.*-.*-.*\.vercel\.app$/, // Allow all Vercel preview URLs
+      /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel domains
       ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
     ],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
