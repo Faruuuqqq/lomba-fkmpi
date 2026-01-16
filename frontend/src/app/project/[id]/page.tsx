@@ -218,20 +218,23 @@ export default function ProjectPage() {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => setIsZenMode(!isZenMode)}
-                variant="ghost"
+                className="border-2 border-bauhaus rounded-none hover:bg-bauhaus-blue hover:text-white transition-colors btn-press"
                 size="sm"
                 title={isZenMode ? "Exit Focus Mode" : "Enter Focus Mode"}
               >
-                {isZenMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                {isZenMode ? <Minimize2 className="w-4 h-4 mr-2" /> : <Maximize2 className="w-4 h-4 mr-2" />}
+                <span className="hidden sm:inline font-bold uppercase tracking-wide text-xs">
+                  {isZenMode ? 'EXIT FOCUS' : 'FOCUS'}
+                </span>
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
+                className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-bold uppercase tracking-wide rounded-none hover:bg-bauhaus-red/90"
                 size="sm"
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'SAVING...' : 'SAVE'}
               </Button>
             </div>
           </div>
@@ -264,27 +267,26 @@ export default function ProjectPage() {
         </aside>
       )}
 
-      {/* Floating Zen Mode Exit Button */}
+      {/* Floating Zen Mode Exit Button - Bauhaus Style */}
       {isZenMode && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-white border-4 border-bauhaus shadow-bauhaus-lg p-2">
           <Button
             onClick={handleSave}
             disabled={isSaving}
+            className="bg-bauhaus-red text-white border-2 border-bauhaus shadow-bauhaus-sm btn-press font-bold uppercase tracking-wide rounded-none hover:bg-bauhaus-red/90"
             size="sm"
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg"
           >
             <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? 'SAVING...' : 'SAVE'}
           </Button>
           <Button
             onClick={() => setIsZenMode(false)}
-            variant="outline"
+            className="bg-white border-2 border-bauhaus rounded-none hover:bg-gray-100 btn-press font-bold uppercase tracking-wide"
             size="sm"
-            className="shadow-lg bg-white dark:bg-slate-900"
             title="Exit Focus Mode (Esc)"
           >
             <Minimize2 className="w-4 h-4 mr-2" />
-            Exit Focus
+            EXIT
           </Button>
         </div>
       )}

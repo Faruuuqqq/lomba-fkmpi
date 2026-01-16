@@ -47,12 +47,22 @@ export default function HomePage() {
       <nav className="border-b-4 border-bauhaus bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
-            {/* Logo - Geometric Shapes */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <div className="w-8 h-8 rounded-full bg-bauhaus-red"></div>
-                <div className="w-8 h-8 bg-bauhaus-blue"></div>
-                <div className="w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-b-[28px] border-b-bauhaus-yellow"></div>
+            {/* Logo - Integrated Geometric Design */}
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-24 flex items-center">
+                {/* Blue Square with M */}
+                <div className="absolute left-0 top-0 bottom-0 w-10 bg-bauhaus-blue border-4 border-bauhaus flex items-center justify-center">
+                  <span className="text-white font-black text-xl">M</span>
+                </div>
+
+                {/* Red Triangle with A */}
+                <svg className="absolute left-7 top-0 w-12 h-10" viewBox="0 0 48 40">
+                  <polygon points="24,0 0,40 48,40" fill="#D02020" stroke="#121212" strokeWidth="3" />
+                  <text x="24" y="30" textAnchor="middle" fill="white" fontSize="20" fontWeight="900">A</text>
+                </svg>
+
+                {/* Yellow Circle */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-bauhaus-yellow border-4 border-bauhaus"></div>
               </div>
               <span className="text-2xl font-black uppercase tracking-tighter">MITRA AI</span>
             </div>
@@ -281,10 +291,20 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <div className="w-6 h-6 rounded-full bg-bauhaus-red"></div>
-                <div className="w-6 h-6 bg-bauhaus-blue"></div>
-                <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[21px] border-b-bauhaus-yellow"></div>
+              <div className="relative h-8 w-20 flex items-center">
+                {/* Blue Square with M */}
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-bauhaus-blue border-2 border-white flex items-center justify-center">
+                  <span className="text-white font-black text-base">M</span>
+                </div>
+
+                {/* Red Triangle with A */}
+                <svg className="absolute left-6 top-0 w-10 h-8" viewBox="0 0 40 32">
+                  <polygon points="20,0 0,32 40,32" fill="#D02020" stroke="white" strokeWidth="2" />
+                  <text x="20" y="24" textAnchor="middle" fill="white" fontSize="16" fontWeight="900">A</text>
+                </svg>
+
+                {/* Yellow Circle */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-bauhaus-yellow border-2 border-white"></div>
               </div>
               <span className="text-xl font-black uppercase tracking-tighter">MITRA AI</span>
             </div>
