@@ -9,6 +9,7 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV PRISMA_CLI_BINARY_TARGETS=native
 RUN npx prisma generate
 RUN npm run build
 
