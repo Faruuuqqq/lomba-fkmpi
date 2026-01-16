@@ -269,6 +269,8 @@ export default function ProjectPage() {
             notification.parentNode.removeChild(notification);
           }
         }, 3000);
+    }
+    }, 3000);
 
     return () => {
       notification.remove();
