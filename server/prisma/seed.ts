@@ -28,6 +28,7 @@ async function main() {
       data: {
         password: hashedPassword,
         name: juryName,
+        role: 'USER', // Ensure role is set
       },
     });
   } else {
@@ -39,6 +40,7 @@ async function main() {
         email: juryEmail,
         password: hashedPassword,
         name: juryName,
+        role: 'USER', // Default role
       },
     });
   }
