@@ -33,9 +33,10 @@ export default function HomePage() {
       return;
     }
 
-    const loadProjects = async () => {
-      try {
-        const projects = await projectsAPI.getAll();
+  const loadProjects = async () => {
+    try {
+        const response = await projectsAPI.getAll();
+        const projects = response.data;
         setProjects(projects);
       } catch (error) {
         console.error('Failed to load projects:', error);
