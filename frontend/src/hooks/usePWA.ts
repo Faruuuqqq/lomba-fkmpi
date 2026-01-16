@@ -18,7 +18,7 @@ export function usePWA(): PWAInstallPrompt {
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setDeferredPrompt(e as unknown as BeforeInstallPromptEvent);
     };
 
     const handleAppInstalled = () => {
@@ -50,7 +50,7 @@ export function usePWA(): PWAInstallPrompt {
 
     try {
       await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+      const outcome = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
         setIsInstalled(true);

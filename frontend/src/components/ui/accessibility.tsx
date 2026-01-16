@@ -1,13 +1,16 @@
 import { cn } from "@/lib/utils";
 
-interface AccessibilityProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+// Accessibility button props interface
+interface AccessibilityProps {
   variant?: 'default' | 'outline' | 'destructive' | 'secondary';
   size?: 'sm' | 'md' | 'lg';
-  children?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
   disabled?: boolean;
   ariaLabel?: string;
   ariaDescribedby?: string;
-  'aria-expanded'?: boolean;
+  ariaExpanded?: boolean;
+  onClick?: () => void;
 }
 
 export function AccessibleButton({
@@ -18,8 +21,8 @@ export function AccessibleButton({
   disabled = false,
   ariaLabel,
   ariaDescribedby,
-  'aria-expanded' = false,
-  ...props
+  ariaExpanded,
+  onClick,
 }: AccessibilityProps) {
   return (
     <button
@@ -28,29 +31,25 @@ export function AccessibleButton({
         "inline-flex items-center justify-center",
         "font-medium",
         "transition-colors",
-        "focus-visible:outline-none",
-        "focus:ring-2",
-        "focus:ring-primary",
-        "disabled:opacity-50",
-        "disabled:cursor-not-allowed",
-        "hover:bg-opacity-90",
-        "px-4 py-2",
-        "rounded-md",
-        "text-sm font-medium",
-        variant === 'default' && "bg-primary text-primary-foreground hover:bg-primary/90",
+        "focus:ring-offset-2 focus:ring-ring-primary focus:ring-offset-2",
+        "disabled:focus-visible:outline-none",
         variant === 'outline' && "border border-input bg-background hover:bg-muted hover:text-foreground",
         variant === 'destructive' && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         variant === 'secondary' && "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        // Accessibility
-        "focus:ring-offset-2 focus:ring-ring-primary focus:ring-offset-2",
-        "disabled:focus-visible:outline-none",
+        variant === 'default' && "bg-primary text-primary-foreground hover:bg-primary/90",
+        disabled && "opacity-50 disabled:cursor-not-allowed",
+        {
+          "h-9 px-3": size === 'sm',
+          "h-10 px-4 py-2": size === 'md',
+          "h-11 px-8": size === 'lg',
+        },
         className
       )}
       disabled={disabled}
       aria-label={ariaLabel}
-      aria-describedby={props['aria-describedby']}
+      aria-describedby={ariaDescribedby}
       aria-expanded={ariaExpanded}
-      {...props}
+      onClick={onClick}
     >
       {children}
     </button>
@@ -109,7 +108,7 @@ interface LiveRegionProps {
 
 export function LiveRegion({ 
   children, 
-  'aria-live': 'polite' = 'polite',
+  'aria-live': ariaLive = 'polite',
   className = ""
 }: LiveRegionProps) {
   return (

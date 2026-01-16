@@ -1,5 +1,7 @@
-import { createContext, useContext, useCallback } from 'react';
+import { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { CheckCircle, X, AlertCircle } from 'lucide-react';
+import { Button } from './button';
+import { cn } from '@/lib/utils';
 
 interface Toast {
   id: string;
@@ -56,18 +58,14 @@ export function useToast() {
   return context;
 }
 
-export function Toast({ id, type, title, message, duration = 5000 }: Omit<Toast> & {
-  isVisible?: boolean;
-} & Toast) {
-  const { toast, showToast } = useToast();
+export function Toast({ id, type, title, message, duration = 5000 }: Toast) {
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
-    if (isVisible !== false) {
-      showToast({ id, type, title, message, duration });
-    }
-  }, [toast, isVisible, showToast, id, type, title, message, duration]);
+    showToast({ id, type, title, message, duration, isVisible: true });
+  }, [showToast, id, type, title, message, duration]);
 
-  if (!toast) {
+  if (!toast || toast.id !== id) {
     return null;
   }
 
@@ -112,13 +110,12 @@ export function Toast({ id, type, title, message, duration = 5000 }: Omit<Toast>
         <Button
           variant="outline"
           size="sm"
-          onClick={toast?.hideToast}
+          onClick={hideToast}
           aria-label="Dismiss notification"
           className="h-6 w-6"
         >
           <X className="w-4 h-4" />
         </Button>
-      </div>
       </div>
     </div>
   );

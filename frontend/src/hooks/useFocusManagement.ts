@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useFocusManagement() {
   const [focusedElement, setFocusedElement] = useState<HTMLElement | null>(null);
-  const [focusableElements, setFocusableElements] = useState<Set<string>>(new Set());
+  const [focusableElements, setFocusableElements] = useState<Set<HTMLElement>>(new Set());
 
   const registerFocusable = (element: HTMLElement) => {
-    if (element && element.focus) {
+    if (element) {
       setFocusedElement(element);
       setFocusableElements(prev => new Set(prev).add(element));
     }
@@ -21,30 +21,31 @@ export function useFocusManagement() {
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const key = event.key;
+    const focusable = Array.from(focusableElements);
 
     // Handle Tab and Shift+Tab for navigation
     if (key === 'Tab') {
+      event.preventDefault();
+      const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+      
       if (event.shiftKey) {
-        const focusable = Array.from(focusableElements);
-        const currentIndex = focusableElements.indexOf(document.activeElement);
-        const nextIndex = (currentIndex + 1) % focusable.length;
-        const nextElement = focusableElements[nextIndex];
-        if (nextElement && nextElement.focus) {
-          event.preventDefault();
-          nextElement.focus();
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : focusable.length - 1;
+        const prevElement = focusable[prevIndex];
+        if (prevElement) {
+          prevElement.focus();
         }
       } else {
-        const prevElement = focusableElements[currentIndex - 1];
-        if (prevElement && prevElement.focus) {
-          event.preventDefault();
-          prevElement.focus();
+        const nextIndex = (currentIndex + 1) % focusable.length;
+        const nextElement = focusable[nextIndex];
+        if (nextElement) {
+          nextElement.focus();
         }
       }
     }
 
     // Handle Escape to clear focus
     if (key === 'Escape') {
-      if (focusedElement && focusedElement.blur) {
+      if (focusedElement) {
         setFocusedElement(null);
         unregisterFocusable(focusedElement);
       }
@@ -55,24 +56,19 @@ export function useFocusManagement() {
       event.preventDefault();
       if (!focusedElement) return;
 
-      const focusable = Array.from(focusableElements);
-      const currentIndex = focusableElements.indexOf(document.activeElement);
+      const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
       
       let newIndex = currentIndex;
       
-      if (key === 'ArrowUp') {
+      if (key === 'ArrowUp' || key === 'ArrowLeft') {
         newIndex = Math.max(0, currentIndex - 1);
-      } else if (key === 'ArrowDown') {
-        newIndex = Math.min(focusableElements.length - 1, currentIndex + 1);
-      } else if (key === 'ArrowLeft') {
-        newIndex = Math.max(0, currentIndex - 1);
-      } else if (key === 'ArrowRight') {
-        newIndex = Math.min(focusableElements.length - 1, currentIndex + 1);
+      } else if (key === 'ArrowDown' || key === 'ArrowRight') {
+        newIndex = Math.min(focusable.length - 1, currentIndex + 1);
       }
       
-      if (newIndex >= 0 && newIndex < focusableElements.length && focusableElements[newIndex]) {
-        const nextElement = focusableElements[newIndex];
-        if (nextElement && nextElement.focus) {
+      if (newIndex >= 0 && newIndex < focusable.length) {
+        const nextElement = focusable[newIndex];
+        if (nextElement) {
           nextElement.focus();
         }
       }

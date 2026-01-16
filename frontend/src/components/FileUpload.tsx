@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { CloudUploadIcon, XCircleIcon, CheckCircleIcon } from '@heroicons/react/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import { AlertCircle } from 'lucide-react';
 
 interface FileUploadProps {
   projectId?: string;
@@ -150,8 +150,10 @@ export default function FileUpload({
         <label
           htmlFor="file-upload"
           className="cursor-pointer flex flex-col items-center"
-        >
-          <CloudUploadIcon className="h-12 w-12 text-gray-400 mb-3" />
+         >
+          <div>
+            <span className="h-12 w-12 text-gray-400 mb-3">☁️</span>
+          </div>
           <span className="text-lg font-medium text-gray-700 mb-1">
             {uploading ? 'Uploading...' : 'Drop files here or click to browse'}
           </span>
@@ -181,10 +183,10 @@ export default function FileUpload({
         {/* Error Message */}
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <div className="flex items-center">
-              <XCircleIcon className="h-5 w-5 text-red-400 mr-2" />
-              <span className="text-sm text-red-700">{error}</span>
-            </div>
+             <div className="flex items-center">
+               <span className="h-5 w-5 text-red-400 mr-2">❌</span>
+               <span className="text-sm text-red-700">{error}</span>
+             </div>
           </div>
         )}
 
@@ -192,7 +194,7 @@ export default function FileUpload({
         {!uploading && uploadedFiles.length > 0 && !error && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
             <div className="flex items-center">
-              <CheckCircleIcon className="h-5 w-5 text-green-400 mr-2" />
+              <span className="h-5 w-5 text-green-400 mr-2">✅</span>
               <span className="text-sm text-green-700">
                 {uploadedFiles.length} file(s) uploaded successfully!
               </span>
@@ -226,7 +228,7 @@ export default function FileUpload({
                   onClick={() => removeFile(file.id)}
                   className="ml-3 p-1 text-gray-400 hover:text-red-500 transition-colors"
                 >
-                  <XCircleIcon className="h-5 w-5" />
+                  <span className="h-5 w-5 text-red-400 mr-2">❌</span>
                 </button>
               </div>
             ))}

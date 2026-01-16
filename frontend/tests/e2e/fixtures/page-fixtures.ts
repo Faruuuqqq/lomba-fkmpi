@@ -17,7 +17,11 @@ export const test = base.extend<CustomFixtures>({
     const helpers = new TestHelpers(page);
     
     // Create a new context for authenticated user
-    const authContext = context.browser().newContext();
+    const browser = context.browser();
+    if (!browser) {
+      throw new Error('Browser not available');
+    }
+    const authContext = await browser.newContext();
     const authPage = await authContext.newPage();
     const authHelpers = new TestHelpers(authPage);
     

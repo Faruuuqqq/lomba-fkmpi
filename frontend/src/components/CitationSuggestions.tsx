@@ -51,7 +51,7 @@ export default function CitationSuggestions({
     try {
       const params = new URLSearchParams({
         topic: searchTerm || '',
-        content: content.slice(0, 100),
+        content: content.slice(0, 1000),
       });
 
       const response = await fetch(`/api/ai/advanced/citation-suggestions?${params}`, {
@@ -106,32 +106,35 @@ export default function CitationSuggestions({
   const uniqueTypes = Array.from(new Set(suggestions.map(s => s.type)));
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <span className="text-2xl font-bold text-green-800">📖</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Citation Suggestions</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">⚠️</span>
+              <div>
+                <h4 className="font-bold text-red-700 mb-1">Error</h4>
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Citation Suggestions</h3>
-            <p className="text-sm text-gray-600">Find relevant academic sources</p>
-          </div>
-        </div>
-      </div>
+        )}
 
-      {/* Search Controls */}
-      <div className="mb-4 space-y-3">
-        <div className="flex space-x-2">
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && searchCitations()}
-              placeholder="Enter topic or keyword..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            />
+        <div className="mb-4 space-y-3">
+          <div className="flex space-x-2">
+            <div className="relative">
+              <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchCitations()}
+                  placeholder="Enter topic or keyword..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+            </div>
             <button
               onClick={searchCitations}
               disabled={isSearching}
@@ -147,58 +150,78 @@ export default function CitationSuggestions({
           </div>
         </div>
 
-        {/* Type Filter */}
-        {uniqueTypes.length > 0 && (
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Filter:</span>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setSelectedType('all')}
-                className={`px-3 py-1 text-sm rounded-full capitalize transition-colors ${
-                  selectedType === 'all' 
-                    ? 'bg-gray-800 text-white' 
+        <div className="mb-4 flex items-center space-x-3">
+          <button
+            onClick={() => setSelectedType('all')}
+            className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+              selectedType === 'all' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All ({suggestions.length})
+          </button>
+          {suggestions.length > 0 && (
+            <button
+              key="book"
+              onClick={() => setSelectedType('book')}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                selectedType === 'book' 
+                    ? 'bg-green-600 text-white' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                All ({suggestions.length})
-              </button>
-              {uniqueTypes.map(type => (
-                <button
-                  key={type}
-                  onClick={() => setSelectedType(type)}
-                  className={`px-3 py-1 text-sm rounded-full capitalize transition-colors ${
-                    selectedType === type 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {type} ({suggestions.filter(s => s.type === type).length})
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <div className="flex items-center">
-              <span className="text-xl mr-2">⚠️</span>
-              <div>
-                <h4 className="font-bold text-red-700 mb-1">Error</h4>
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Results */}
-        {filteredSuggestions.length > 0 && !error && (
+              }`}
+            >
+              📖 Book ({suggestions.filter(s => s.type === 'book').length})
+            </button>
+          )}
+          {suggestions.length > 0 && (
+            <button
+              key="journal"
+              onClick={() => setSelectedType('journal')}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                selectedType === 'journal' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              📖 Journal ({suggestions.filter(s => s.type === 'journal').length})
+            </button>
+          )}
+          {suggestions.length > 0 && (
+            <button
+              key="website"
+              onClick={() => setSelectedType('website')}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                selectedType === 'website' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              🌐 Website ({suggestions.filter(s => s.type === 'website').length})
+            </button>
+          )}
+          {suggestions.length > 0 && (
+            <button
+              key="academic"
+              onClick={() => setSelectedType('academic')}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                selectedType === 'academic' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              📖 Academic ({suggestions.filter(s => s.type === 'academic').length})
+            </button>
+          )}
+        </div>
+      </CardContent>
+      <CardContent>
+        {filteredSuggestions.length > 0 && (
           <div className="space-y-4 max-h-96 overflow-y-auto">
             {filteredSuggestions.map((suggestion, index) => (
               <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 mt-1">
@@ -207,41 +230,40 @@ export default function CitationSuggestions({
                     </span>
                   </div>
 
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-gray-900 mb-1">{suggestion.title}</h4>
                     <div className="flex items-center space-x-3 text-sm text-gray-600">
                       <span>{suggestion.authors.join(', ')}</span>
                       <span>({suggestion.year})</span>
                     </div>
 
-                    <p className="text-sm text-gray-700 mb-2">
+                    <p className="text-sm text-gray-700 mb-3">
                       {suggestion.description}
                     </p>
 
+                    <div className="flex items-center space-x-3">
+                      <span className={`text-sm font-medium rounded-full px-2 py-1 ${getRelevanceColor(suggestion.relevance)}`}>
+                        {suggestion.relevance}%
+                      </span>
+
+                      <button
+                        onClick={() => onCitationSelect?.(suggestion)}
+                        className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Use Citation
+                      </button>
+                    </div>
+
                     {suggestion.url && (
                       <a
-                        href={suggestion.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <Link className="h-4 w-4 mr-1" />
-                        View Source
-                      </a>
+                          href={suggestion.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          📖 View Source
+                        </a>
                     )}
-                  </div>
-
-                  <div className="flex items-center space-x-3 ml-4">
-                    <span className={`text-sm font-medium rounded-full px-2 py-1 ${getRelevanceColor(suggestion.relevance)}`}>
-                      {suggestion.relevance}%
-                    </span>
-
-                    <button
-                      onClick={() => onCitationSelect?.(suggestion)}
-                      className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      Use Citation
-                    </button>
                   </div>
                 </div>
               </div>
@@ -249,7 +271,6 @@ export default function CitationSuggestions({
           </div>
         )}
 
-        {/* No Results */}
         {!isSearching && filteredSuggestions.length === 0 && !error && (
           <div className="text-center py-8">
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -280,7 +301,7 @@ export default function CitationSuggestions({
             </div>
           </div>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
 }
