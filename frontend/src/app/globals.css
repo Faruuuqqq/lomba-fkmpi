@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,78 +6,49 @@
 
 @layer base {
   :root {
-    /* Premium Color Palette - Deep Indigo Theme */
-    --background: 0 0% 98%;  /* Off-white instead of pure white */
-    --foreground: 222.2 47% 11%;
+    /* Bauhaus Color Palette */
+    --background: 240 10% 94%;
+    /* #F0F0F0 Off-white */
+    --foreground: 0 0% 7%;
+    /* #121212 Stark Black */
+
+    /* Bauhaus Primary Colors */
+    --bauhaus-red: 0 75% 47%;
+    /* #D02020 */
+    --bauhaus-blue: 229 85% 40%;
+    /* #1040C0 */
+    --bauhaus-yellow: 45 86% 54%;
+    /* #F0C020 */
+
+    /* Utility Colors */
+    --border: 0 0% 7%;
+    /* Black borders */
+    --muted: 0 0% 88%;
+    /* #E0E0E0 */
+
+    /* Shadcn/ui compatibility */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47% 11%;
-    
-    /* Deep Indigo Primary - Professional & Intellectual */
-    --primary: 238 83% 58%;  /* Deep Indigo #4f46e5 */
+    --card-foreground: 0 0% 7%;
+    --primary: 0 75% 47%;
+    /* Bauhaus Red */
     --primary-foreground: 0 0% 100%;
-    
-    /* Subtle Secondary */
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222.2 47% 11%;
-    
-    /* Muted backgrounds */
-    --muted: 220 13% 95%;
-    --muted-foreground: 215 16% 47%;
-    
-    /* Teal Accent for success/valid states */
-    --accent: 173 80% 40%;  /* Teal */
-    --accent-foreground: 0 0% 100%;
-    
-    /* Warning - Amber */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    
+    --secondary: 229 85% 40%;
+    /* Bauhaus Blue */
+    --secondary-foreground: 0 0% 100%;
+    --accent: 45 86% 54%;
+    /* Bauhaus Yellow */
+    --accent-foreground: 0 0% 7%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 238 83% 58%;
-    --radius: 0.5rem;
-    
-    /* Editor specific - Cream/Paper background */
-    --editor-bg: 45 29% 97%;  /* Cream color like paper */
+    --ring: 0 75% 47%;
+    --radius: 0rem;
+    /* No rounded corners by default */
   }
 
   .dark {
-    --background: 222 47% 6%;  /* Deep slate background */
-    --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
-    
-    /* Lighter Indigo for dark mode */
-    --primary: 238 75% 65%;
-    --primary-foreground: 222 47% 11%;
-    
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    
-    --muted: 217 33% 15%;
-    --muted-foreground: 215 20% 65%;
-    
-    --accent: 173 70% 45%;
-    --accent-foreground: 0 0% 100%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 238 75% 65%;
-    
-    --editor-bg: 222 47% 10%;
+    /* Dark mode disabled for Bauhaus - always light */
+    --background: 240 10% 94%;
+    --foreground: 0 0% 7%;
   }
 }
 
@@ -85,87 +56,123 @@
   * {
     @apply border-border;
   }
-  
+
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  
-  /* Academic Serif Font for Editor Content */
-  .font-serif-academic {
-    font-family: 'Merriweather', Georgia, 'Times New Roman', serif;
-  }
-  
-  /* Smooth transitions for better UX */
-  * {
-    @apply transition-colors duration-200;
+    @apply bg-background text-foreground font-['Outfit'];
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer components {
-  /* Paper-like Editor Container */
-  .editor-paper {
-    background-color: hsl(var(--editor-bg));
-    box-shadow: 
-      0 1px 3px rgba(0, 0, 0, 0.05),
-      0 10px 30px rgba(0, 0, 0, 0.08),
-      0 20px 60px rgba(0, 0, 0, 0.06);
-  }
-  
-  /* Floating Toolbar */
-  .toolbar-floating {
-    @apply sticky top-0 z-10 backdrop-blur-md bg-white/80 dark:bg-slate-950/80;
-  }
-  
-  /* Skeleton Loading Animation */
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-  
-  .skeleton {
-    animation: shimmer 2s infinite linear;
-    background: linear-gradient(
-      to right,
-      hsl(var(--muted)) 4%,
-      hsl(var(--muted-foreground) / 0.1) 25%,
-      hsl(var(--muted)) 36%
-    );
-    background-size: 1000px 100%;
-  }
-}
-
+/* Bauhaus Hard Shadows */
 @layer utilities {
-  /* Text streaming effect for AI responses */
-  @keyframes typing {
-    from {
-      width: 0;
-    }
+  .shadow-bauhaus-sm {
+    box-shadow: 3px 3px 0px 0px #121212;
   }
-  
-  .typing-effect {
-    overflow: hidden;
-    white-space: nowrap;
-    animation: typing 2s steps(40, end);
+
+  .shadow-bauhaus {
+    box-shadow: 4px 4px 0px 0px #121212;
   }
-  
-  /* Smooth fade-in */
+
+  .shadow-bauhaus-md {
+    box-shadow: 6px 6px 0px 0px #121212;
+  }
+
+  .shadow-bauhaus-lg {
+    box-shadow: 8px 8px 0px 0px #121212;
+  }
+
+  /* Button Press Effect */
+  .btn-press {
+    @apply active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+  }
+
+  /* Bauhaus Colors */
+  .bg-bauhaus-red {
+    background-color: #D02020;
+  }
+
+  .bg-bauhaus-blue {
+    background-color: #1040C0;
+  }
+
+  .bg-bauhaus-yellow {
+    background-color: #F0C020;
+  }
+
+  .text-bauhaus-red {
+    color: #D02020;
+  }
+
+  .text-bauhaus-blue {
+    color: #1040C0;
+  }
+
+  .text-bauhaus-yellow {
+    color: #F0C020;
+  }
+
+  .border-bauhaus {
+    border-color: #121212;
+  }
+
+  /* Geometric Shapes */
+  .triangle-up {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 14px solid currentColor;
+  }
+
+  /* Dot Grid Pattern */
+  .pattern-dots {
+    background-image: radial-gradient(circle, #121212 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.1;
+  }
+
+  /* Fade In Animation */
   .fade-in {
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.3s ease-out;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Skeleton Loading */
+  .skeleton {
+    @apply animate-pulse bg-muted;
+  }
+}
+
+/* Remove default focus rings, add Bauhaus style */
+@layer base {
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #D02020, 0 0 0 4px white;
+  }
+}
+
+/* Typography Utilities */
+@layer utilities {
+  .text-bauhaus-display {
+    @apply text-4xl sm:text-6xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.9];
+  }
+
+  .text-bauhaus-heading {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold uppercase tracking-tight;
+  }
+
+  .text-bauhaus-label {
+    @apply text-sm font-bold uppercase tracking-widest;
   }
 }

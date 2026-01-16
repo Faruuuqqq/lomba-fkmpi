@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Brain, Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Circle, Square, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,155 +50,210 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 dark:from-slate-950 dark:via-indigo-950/20 dark:to-purple-950/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl">
-              <Brain className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              NALAR.AI
-            </h1>
-          </div>
-          <p className="text-slate-600 dark:text-slate-400">
-            Welcome back! Sign in to continue writing.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative Background Shapes */}
+      <div className="absolute top-12 left-12 w-32 h-32 rounded-full bg-bauhaus-yellow opacity-20"></div>
+      <div className="absolute bottom-12 right-12 w-40 h-40 bg-bauhaus-blue opacity-20 rotate-45"></div>
+      <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-bauhaus-red opacity-20"></div>
 
-        {/* Login Card */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-xl">
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="w-full max-w-5xl relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+          {/* Left: Branding */}
+          <div className="hidden lg:flex flex-col justify-center bg-bauhaus-blue border-4 border-bauhaus shadow-bauhaus-lg p-12 relative">
+            {/* Geometric Logo */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-12 h-12 rounded-full bg-bauhaus-red border-4 border-bauhaus"></div>
+                <div className="w-12 h-12 bg-bauhaus-yellow border-4 border-bauhaus"></div>
+                <div className="w-0 h-0 border-l-[24px] border-l-transparent border-r-[24px] border-r-transparent border-b-[42px] border-b-white"></div>
+              </div>
+              <h1 className="text-5xl font-black uppercase tracking-tighter text-white mb-2">
+                MITRA AI
+              </h1>
+              <p className="text-xl font-bold uppercase tracking-wide text-white/90">
+                Academic Writing Assistant
+              </p>
+            </div>
+
+            <div className="space-y-6 text-white">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
+                  <Circle className="w-4 h-4 text-bauhaus-blue" fill="currentColor" />
+                </div>
+                <div>
+                  <h3 className="font-bold uppercase tracking-wide mb-1">CRITICAL THINKING</h3>
+                  <p className="font-medium opacity-90">AI unlocks after 150 words of original thought</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-bauhaus-red border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
+                  <Square className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold uppercase tracking-wide mb-1">LOGIC MAPPING</h3>
+                  <p className="font-medium opacity-90">Visualize your arguments in real-time</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
+                  <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-bauhaus-blue"></div>
+                </div>
+                <div>
+                  <h3 className="font-bold uppercase tracking-wide mb-1">BIAS DETECTION</h3>
+                  <p className="font-medium opacity-90">Identify fallacies and strengthen arguments</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Decorative Shape */}
+            <div className="absolute bottom-8 right-8 w-24 h-24 bg-white opacity-20 rotate-45"></div>
+          </div>
+
+          {/* Right: Login Form */}
+          <div className="bg-white border-4 border-bauhaus shadow-bauhaus-lg p-8 sm:p-12">
+            {/* Mobile Logo */}
+            <div className="lg:hidden mb-8 text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-full bg-bauhaus-red"></div>
+                <div className="w-8 h-8 bg-bauhaus-blue"></div>
+                <div className="w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-b-[28px] border-b-bauhaus-yellow"></div>
+              </div>
+              <h1 className="text-3xl font-black uppercase tracking-tighter">MITRA AI</h1>
+            </div>
+
+            <div className="mb-8">
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-2">
+                SIGN IN
+              </h2>
+              <p className="font-medium text-lg">
+                Welcome back! Continue your writing journey.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                <label htmlFor="email" className="text-bauhaus-label mb-3 block">
                   Email Address
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@university.edu"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12"
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your.email@university.edu"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 border-4 border-bauhaus rounded-none font-medium text-lg focus-visible:ring-bauhaus-red focus-visible:ring-offset-0"
+                  disabled={isLoading}
+                  required
+                />
               </div>
 
               {/* Password Input */}
               <div>
-                <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                <label htmlFor="password" className="text-bauhaus-label mb-3 block">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12"
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-14 border-4 border-bauhaus rounded-none font-medium text-lg focus-visible:ring-bauhaus-red focus-visible:ring-offset-0"
+                  disabled={isLoading}
+                  required
+                />
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg">
-                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                <div className="p-4 bg-bauhaus-red/10 border-4 border-bauhaus-red">
+                  <p className="font-bold text-bauhaus-red uppercase tracking-wide">{error}</p>
                 </div>
               )}
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-base font-medium"
+                className="w-full h-14 bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase tracking-wider text-lg rounded-none hover:bg-bauhaus-red/90"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                    <span>Signing in...</span>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    <span>SIGNING IN...</span>
                   </div>
                 ) : (
                   <>
-                    Sign In
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    SIGN IN
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </>
                 )}
               </Button>
             </form>
 
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                <div className="w-full border-t-4 border-bauhaus" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white dark:bg-slate-950 text-slate-500">
-                  or
+              <div className="relative flex justify-center">
+                <span className="px-4 bg-white font-bold uppercase tracking-widest text-sm">
+                  OR
                 </span>
               </div>
             </div>
 
             {/* Jury Access */}
-            <div className="p-4 bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 border border-teal-200 dark:border-teal-900 rounded-xl">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="p-2 bg-teal-600 rounded-lg">
-                  <Sparkles className="w-4 h-4 text-white" />
+            <div className="p-6 bg-bauhaus-yellow border-4 border-bauhaus shadow-bauhaus-sm mb-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2 bg-white border-2 border-bauhaus">
+                  <Sparkles className="w-5 h-5 text-bauhaus-blue" strokeWidth={3} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">
-                    Competition Judges
+                  <h3 className="font-black uppercase tracking-tight mb-1">
+                    COMPETITION JUDGES
                   </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="font-medium text-sm">
                     Quick access for demo and evaluation
                   </p>
                 </div>
               </div>
               <Button
                 onClick={handleJuryAccess}
-                variant="outline"
-                className="w-full border-teal-300 dark:border-teal-800 hover:bg-teal-100 dark:hover:bg-teal-900/30"
                 type="button"
+                className="w-full h-12 bg-white text-foreground border-4 border-bauhaus shadow-bauhaus-sm btn-press font-bold uppercase tracking-wide rounded-none hover:bg-gray-100"
               >
-                Use Demo Account
+                USE DEMO ACCOUNT
               </Button>
             </div>
 
             {/* Sign Up Link */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+            <div className="text-center">
+              <p className="font-medium">
                 Don't have an account?{' '}
                 <button
                   type="button"
                   onClick={() => router.push('/register')}
-                  className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                  className="font-black text-bauhaus-red uppercase tracking-wide hover:underline"
                 >
-                  Sign up for free
+                  SIGN UP FREE
                 </button>
               </p>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push('/')}
-            className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-          >
-            ← Back to home
-          </button>
+            {/* Back to Home */}
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => router.push('/')}
+                className="font-bold uppercase tracking-widest text-sm hover:text-bauhaus-red transition-colors"
+              >
+                ← BACK TO HOME
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
