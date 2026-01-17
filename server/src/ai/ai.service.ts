@@ -48,7 +48,7 @@ Rules:
         this.httpService.post(
           'https://api.z.ai/api/paas/v4/chat/completions',
           {
-            model: 'glm-4.7',
+            model: 'glm-4.5', // More cost-effective model
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
@@ -151,7 +151,7 @@ Return ONLY valid JSON in this exact format:
       this.httpService.post(
         'https://api.z.ai/api/paas/v4/chat/completions',
         {
-          model: 'glm-4.7',
+          model: 'glm-4.5',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
@@ -251,7 +251,7 @@ Return ONLY valid JSON in this exact format:
       this.httpService.post(
         'https://api.z.ai/api/paas/v4/chat/completions',
         {
-          model: 'glm-4.7',
+          model: 'glm-4.5',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
