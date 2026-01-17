@@ -76,6 +76,7 @@ export const gamificationAPI = {
   submitChallenge: (challengeId: number, answerIndex: number) =>
     api.post('/gamification/challenge/submit', { challengeId, answerIndex }),
   checkBalance: (cost: number) => api.post('/gamification/check-balance', { cost }),
+  rewardWriting: (wordCount: number) => api.post('/gamification/reward-writing', { wordCount }),
 };
 
 export default api;

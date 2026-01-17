@@ -259,6 +259,30 @@ export class GamificationService {
         return { newBalance: updated.tokens };
     }
 
+    // Reward writing (simplified endpoint)
+    async rewardWriting(userId: string, wordCount: number) {
+        // Simple implementation: award 1 token per 50 words threshold
+        const tokensToAward = Math.floor(wordCount / 50);
+
+        if (tokensToAward > 0) {
+            const updated = await this.prisma.user.update({
+                where: { id: userId },
+                data: {
+                    tokens: { increment: tokensToAward },
+                    lastActive: new Date(),
+                },
+            });
+
+            return {
+                success: true,
+                tokensEarned: tokensToAward,
+                newBalance: updated.tokens,
+            };
+        }
+
+        return { success: false, tokensEarned: 0 };
+    }
+
     private getNextMidnight(): Date {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);

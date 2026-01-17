@@ -42,4 +42,10 @@ export class GamificationController {
             needed: body.cost,
         };
     }
+
+    // Reward user for writing (Write-to-Earn)
+    @Post('reward-writing')
+    async rewardWriting(@Request() req, @Body() body: { wordCount: number }) {
+        return this.gamificationService.rewardWriting(req.user.sub, body.wordCount);
+    }
 }

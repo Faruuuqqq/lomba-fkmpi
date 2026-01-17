@@ -3,9 +3,11 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo, Heading1, Heading2, Type } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useGamification } from '@/contexts/GamificationContext';
+import { gamificationAPI } from '@/lib/api';
 
 interface EditorProps {
   content: string;
@@ -14,6 +16,10 @@ interface EditorProps {
 }
 
 export function Editor({ content, onUpdate, isLocked }: EditorProps) {
+  const { addTokens } = useGamification();
+  const [lastRewardedWordCount, setLastRewardedWordCount] = useState(0);
+  const rewardCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -24,6 +30,15 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
       const html = editor.getHTML();
       const text = editor.getText();
       onUpdate(text);
+
+      // Write-to-Earn: Check word count for rewards
+      if (rewardCheckTimeoutRef.current) {
+        clearTimeout(rewardCheckTimeoutRef.current);
+      }
+
+      rewardCheckTimeoutRef.current = setTimeout(() => {
+        checkWritingReward(editor);
+      }, 2000); // Debounce 2 seconds
     },
     editorProps: {
       handlePaste: (view, event, slice) => {
@@ -45,6 +60,34 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
       },
     },
   });
+
+  // Write-to-Earn: Check if user earned tokens
+  const checkWritingReward = async (editorInstance: any) => {
+    if (!editorInstance) return;
+
+    const currentWordCount = editorInstance.getText().split(/\s+/).filter((w: string) => w.length > 0).length;
+    const threshold = 50; // 50 words = 1 token
+
+    if (currentWordCount - lastRewardedWordCount >= threshold) {
+      try {
+        // Call backend to reward
+        const { data } = await gamificationAPI.rewardWriting(currentWordCount);
+
+        if (data.success) {
+          const tokensEarned = Math.floor((currentWordCount - lastRewardedWordCount) / threshold);
+          setLastRewardedWordCount(currentWordCount);
+          addTokens(tokensEarned);
+
+          toast.success(`🪙 +${tokensEarned} Token${tokensEarned > 1 ? 's' : ''}! Keep writing.`, {
+            duration: 3000,
+            icon: '✍️',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to claim writing reward:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     if (editor && content !== editor.getText()) {
