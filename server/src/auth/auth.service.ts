@@ -11,7 +11,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private accountSecurity: AccountSecurityService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
@@ -29,6 +29,7 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         name: dto.name,
+        tokens: 100, // Starter pack: 100 tokens for demo
       },
       select: {
         id: true,
@@ -40,7 +41,7 @@ export class AuthService {
 
     const token = this.generateToken(user.id);
 
-    return { 
+    return {
       user,
       token,
       message: 'User registered successfully'
@@ -49,7 +50,7 @@ export class AuthService {
 
   async login(dto: LoginDto, request?: any) {
     const normalizedEmail = dto.email.toLowerCase();
-    
+
     // Check if account is locked
     const lockoutStatus = await this.accountSecurity.isAccountLocked(normalizedEmail);
     if (lockoutStatus.isLocked) {
@@ -153,7 +154,7 @@ export class AuthService {
     // 2. Check token expiration
     // 3. Update user password
     // 4. Invalidate all existing sessions
-    
+
     throw new UnauthorizedException('Password reset feature not yet implemented');
   }
 

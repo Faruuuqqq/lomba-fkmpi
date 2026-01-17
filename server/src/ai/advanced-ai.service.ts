@@ -321,7 +321,7 @@ Score 80-100: Likely plagiarized`
         params: {
           search: topic,
           filter: 'type:article,is_oa:true', // Open access articles
-          per_page: 5,
+          per_page: 8, // Increased from 5 to 8 for more results
           sort: 'cited_by_count:desc' // Most cited first
         },
         headers: {
