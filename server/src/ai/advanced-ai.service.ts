@@ -102,15 +102,21 @@ Keep responses under 3 sentences. Be direct and thought-provoking.`
         ]
       };
     } catch (error) {
-      console.error('Devil\'s Advocate API error:', error);
-      // Intelligent fallback
+      console.error('Devil\'s Advocate API error:', error.message);
+      // Enhanced Fallback
+      const fallbacks = [
+        "Argumen Anda menarik, namun apakah Anda sudah mempertimbangkan kemungkinan bahwa faktor eksternal yang Anda sebutkan justru merupakan hasil dari fenomena ini, bukan penyebabnya?",
+        "Anda membangun argumen yang kuat di sini. Namun, jika kita menggunakan standar bukti yang lebih ketat, apakah data yang Anda miliki saat ini cukup kuat untuk menopang kesimpulan besar tersebut?",
+        "Mari kita balik logikanya sejenak: jika premis utama Anda salah, apa implikasi paling kritis terhadap seluruh solusi yang Anda tawarkan?",
+        "Seberapa yakin Anda bahwa korelasi yang Anda temukan di sini benar-benar merupakan hubungan sebab-akibat? Apakah ada penjelasan alternatif yang lebih sederhana?"
+      ];
       return {
-        text: "Have you considered the opposing viewpoint? What evidence contradicts your main claim? Could there be alternative explanations for the phenomena you describe?",
+        text: fallbacks[Math.floor(Math.random() * fallbacks.length)],
         persona: 'devils_advocate',
         suggestions: [
-          'Think broader',
-          'Verify sources',
-          'Consider alternative viewpoints'
+          'Berikan bukti pendukung lebih kuat',
+          'Tinjau kembali hubungan sebab-akibat',
+          'Analisis sudut pandang berlawanan'
         ]
       };
     }
@@ -185,40 +191,49 @@ Be thorough but focus on significant issues. Academic writing should be formal a
 
   private heuristicGrammarCheck(text: string): GrammarCheckResult {
     const issues = [];
-    let score = 100;
+    let score = 95;
 
     // Check for common issues
-    if (text.includes('  ')) {
+    const doubleSpaces = (text.match(/  /g) || []).length;
+    if (doubleSpaces > 0) {
       issues.push({
         type: 'style' as const,
-        message: 'Double space detected',
-        suggestion: 'Use single space',
+        message: `${doubleSpaces} spasi ganda terdeteksi.`,
+        suggestion: 'Gunakan spasi tunggal di antara kata.',
         position: { start: text.indexOf('  '), end: text.indexOf('  ') + 2, line: 1 }
+      });
+      score -= Math.min(doubleSpaces * 2, 20);
+    }
+
+    if (!/[.!?]$/.test(text.trim()) && text.length > 5) {
+      issues.push({
+        type: 'punctuation' as const,
+        message: 'Kalimat terakhir mungkin belum selesai atau kurang tanda baca.',
+        suggestion: 'Tambahkan titik (.), tanda tanya (?), atau tanda seru (!).',
+        position: { start: text.length - 1, end: text.length, line: 1 }
       });
       score -= 5;
     }
 
-    if (!/[.!?]$/.test(text.trim())) {
-      issues.push({
-        type: 'punctuation' as const,
-        message: 'Missing ending punctuation',
-        suggestion: 'Add period, exclamation, or question mark',
-        position: { start: text.length - 1, end: text.length, line: 1 }
-      });
-      score -= 10;
-    }
-
-    // Check for passive voice
-    const passiveIndicators = ['was', 'were', 'been', 'being'];
-    passiveIndicators.forEach(word => {
-      if (text.toLowerCase().includes(` ${word} `)) {
-        score -= 3;
-      }
+    // Passive voice detection
+    const passiveWords = ['adalah', 'di-', 'ter-'];
+    let passiveCount = 0;
+    passiveWords.forEach(word => {
+      if (text.toLowerCase().includes(word)) passiveCount++;
     });
+    if (passiveCount > 3) {
+      issues.push({
+        type: 'style' as const,
+        message: 'Terlalu banyak penggunaan kalimat pasif.',
+        suggestion: 'Coba gunakan kalimat aktif untuk hasil yang lebih persuasif.',
+        position: { start: 0, end: 10, line: 1 }
+      });
+      score -= 5;
+    }
 
     return {
       issues,
-      score: Math.max(score, 0),
+      score: Math.max(score, 70),
       correctedText: text
     };
   }

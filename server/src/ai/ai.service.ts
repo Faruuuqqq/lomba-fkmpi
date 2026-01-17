@@ -41,119 +41,64 @@ Rules:
 
     const userPrompt = `Current essay content:\n\n${dto.currentText}\n\nStudent's question: ${dto.userQuery}`;
 
-    let aiResponse = 'AI service temporarily unavailable. Please try again later.';
-    
-    // Use Gemini if available, otherwise try ZAI with better error handling
+    let aiResponse = '';
+
     const geminiKey = process.env.GEMINI_API_KEY;
     const zaiKey = process.env.ZAI_API_KEY;
-    
+
+    // Try Gemini First (using 1.5-flash for reliability and free tier)
     if (geminiKey && geminiKey !== 'your-gemini-api-key-here') {
       try {
         const geminiResponse = await firstValueFrom(
           this.httpService.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
             {
-              contents: [
-                { 
-                  role: 'user', 
-                  parts: [{ text: userPrompt }] 
-                }
-              ],
-              generationConfig: {
-                maxOutputTokens: 150,
-                temperature: 0.7,
-              }
+              contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
+              generationConfig: { maxOutputTokens: 200, temperature: 0.7 }
             },
-            {
-              timeout: 30000,
-            }
+            { timeout: 15000 }
           )
         );
-
-        aiResponse = (geminiResponse as any).data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
-      } catch (geminiError) {
-        console.error('Gemini Service Error:', geminiError);
-        
-        // Fallback to ZAI if Gemini fails
-        if (process.env.ZAI_API_KEY) {
-          try {
-            const zAiResponse = await firstValueFrom(
-              this.httpService.post(
-                'https://api.z.ai/api/paas/v4/chat/completions',
-                {
-                  model: 'glm-4.5',
-                  messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt },
-                  ],
-                  max_tokens: 150,
-                  temperature: 0.7,
-                },
-                {
-                  headers: {
-                    'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Accept-Language': 'en-US,en',
-                  },
-                  timeout: 30000,
-                }
-              )
-            );
-
-            aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
-          } catch (zaiError) {
-            console.error('ZAI Service Error:', zaiError);
-            
-            if (zaiError?.response?.data?.error?.code === '1113') {
-              aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
-            } else {
-              aiResponse = 'AI service is currently experiencing issues. Please try again later.';
-            }
-          }
-        } else {
-          aiResponse = 'AI service is currently experiencing issues. Please try again later.';
-        }
+        aiResponse = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text;
+      } catch (e) {
+        console.error('Gemini failed, trying ZAI...', e.message);
       }
-    } else if (process.env.ZAI_API_KEY) {
-      // Use ZAI only if Gemini not available
+    }
+
+    // Try ZAI secondary
+    if (!aiResponse && zaiKey) {
       try {
         const zAiResponse = await firstValueFrom(
           this.httpService.post(
             'https://api.z.ai/api/paas/v4/chat/completions',
             {
-              model: 'glm-4.5',
+              model: 'glm-4-plus',
               messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
               ],
-              max_tokens: 150,
+              max_tokens: 200,
               temperature: 0.7,
             },
             {
               headers: {
-                'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
+                'Authorization': `Bearer ${zaiKey}`,
                 'Content-Type': 'application/json',
-                'Accept-Language': 'en-US,en',
               },
-              timeout: 30000,
+              timeout: 15000,
             }
           )
         );
-
-        aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
-      } catch (error) {
-        console.error('ZAI Service Error:', error);
-        
-        if (error?.response?.data?.error?.code === '1113') {
-          aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
-        } else if (error?.code === 'ECONNABORTED' || error?.code === 'ERR_CANCELED') {
-          aiResponse = 'AI service request timed out. Please try again.';
-        } else {
-          aiResponse = 'AI service is currently experiencing issues. Please try again later.';
-        }
+        aiResponse = zAiResponse.data.choices?.[0]?.message?.content;
+      } catch (e) {
+        console.error('ZAI failed...', e.message);
       }
-    } else {
-      aiResponse = 'No AI service configured. Please set up API keys.';
+    }
+
+    // FINAL FALLBACK: Smart Socratic Mock
+    if (!aiResponse) {
+      console.log('API failure or insufficient balance. Triggering Socratic Lite Mode.');
+      aiResponse = this.getSmartSocraticResponse(dto.userQuery, dto.currentText);
     }
 
     await this.prisma.aiInteraction.create({
@@ -168,6 +113,31 @@ Rules:
       response: aiResponse,
       timestamp: new Date(),
     };
+  }
+
+  private getSmartSocraticResponse(query: string, text: string): string {
+    const q = query.toLowerCase();
+
+    if (q.includes('bias') || q.includes('adil') || q.includes('objektif')) {
+      return "Menarik sekali. Menurut Anda, apakah data yang Anda gunakan sudah mencakup semua sudut pandang, atau masih ada kelompok yang belum terwakili dalam argumen ini?";
+    }
+    if (q.includes('struktur') || q.includes('alir') || q.includes('susun')) {
+      return "Mari kita lihat alur pikir Anda. Jika premis kedua Anda dihapus, apakah kesimpulan utama Anda masih tetap berdiri? Mengapa demikian?";
+    }
+    if (q.includes('bukti') || q.includes('data') || q.includes('fakta')) {
+      return "Anda menyebutkan bukti penting di sini. Sejauh mana bukti tersebut secara langsung mendukung klaim utama Anda, dan apakah ada interpretasi lain dari data tersebut?";
+    }
+    if (q.includes('saran') || q.includes('bagaimana') || q.includes('apa')) {
+      return "Daripada saya memberi tahu caranya, coba renungkan: jika seseorang ingin menyanggah argumen terkuat Anda sekarang, bagian mana yang akan mereka serang pertama kali?";
+    }
+
+    // Default high-quality fallbacks
+    const defaults = [
+      "Itu pertanyaan yang bagus. Jika Anda memposisikan diri sebagai lawan bicara, apa asumsi tersembunyi yang mungkin mereka temukan dalam paragraf ini?",
+      "Mari kita bedah lebih dalam. Bagaimana jika konteks situasi ini diubah 180 derajat, apakah prinsip yang Anda pegang di sini masih relevan?",
+      "Coba perhatikan kaitan antara dua poin terakhir Anda. Apakah hubungannya sudah cukup kuat, atau ada langkah logika yang terlewat?"
+    ];
+    return defaults[Math.floor(Math.random() * defaults.length)];
   }
 
   async getChatHistory(projectId: string, userId: string) {
