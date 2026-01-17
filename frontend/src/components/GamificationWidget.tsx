@@ -123,6 +123,14 @@ export function GamificationWidget() {
                                         <li>• Maintain streak: +5 tokens/day</li>
                                     </ul>
                                 </div>
+
+                                {/* View Full Progress Button */}
+                                <button
+                                    onClick={() => window.location.href = '/gamification'}
+                                    className="w-full p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold uppercase text-xs transition-colors"
+                                >
+                                    View Full Progress →
+                                </button>
                             </div>
                         </div>
                     </>
