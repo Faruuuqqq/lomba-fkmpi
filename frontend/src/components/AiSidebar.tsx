@@ -42,13 +42,13 @@ export function AiSidebar({
       setQuery('');
     } catch (error) {
       console.error('Error analyzing:', error);
-      alert('Failed to get AI response. Make sure you have written at least 150 words.');
+      alert('Failed to get AI response. Make sure you have written at least 50 words.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const progress = Math.min((wordCount / 150) * 100, 100);
+  const progress = Math.min((wordCount / 50) * 100, 100);
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-xl">
@@ -92,7 +92,7 @@ export function AiSidebar({
             </div>
             <h3 className="font-semibold mb-2 text-slate-900 dark:text-slate-100">AI Locked</h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              Write at least <span className="font-semibold text-indigo-600 dark:text-indigo-400">150 words</span> to unlock AI assistance
+              Write at least <span className="font-semibold text-indigo-600 dark:text-indigo-400">50 words</span> to unlock AI assistance
             </p>
 
             {/* Progress Bar */}
@@ -105,7 +105,7 @@ export function AiSidebar({
               </div>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {wordCount}/150 words ({wordsToUnlock} more to unlock)
+              {wordCount}/50 words ({wordsToUnlock} more to unlock)
             </p>
           </div>
         ) : (

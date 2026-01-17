@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { projectsAPI } from '@/lib/api';
 import { Project } from '@/types';
-import { Plus, FileText, LogOut, Trash2, Search, BarChart3, Circle, Square } from 'lucide-react';
-import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import { Plus, FileText, LogOut, Trash2, Search, Circle, Square } from 'lucide-react';
+
 import { useDebounce } from '@/hooks/useDebounce';
 
 export default function DashboardPage() {
@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'DRAFT' | 'FINAL'>('all');
-  const [showAnalytics, setShowAnalytics] = useState(false);
+
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -125,16 +125,6 @@ export default function DashboardPage() {
             {/* Actions */}
             <div className="flex items-center gap-2">
               <Button
-                variant={showAnalytics ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="hidden sm:flex border-2 border-bauhaus rounded-none font-bold uppercase tracking-wide"
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analytics
-              </Button>
-
-              <Button
                 onClick={logout}
                 className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-bold uppercase tracking-wide rounded-none hover:bg-bauhaus-red/90"
               >
@@ -179,12 +169,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Analytics Section */}
-        {showAnalytics && (
-          <div className="mb-12">
-            <AnalyticsDashboard />
-          </div>
-        )}
 
         {/* Create New Project - Bauhaus Style */}
         <Card className="mb-8 border-4 border-bauhaus shadow-bauhaus-lg rounded-none bg-white">
@@ -244,8 +228,8 @@ export default function DashboardPage() {
                 onClick={() => setFilterStatus(status)}
                 variant={filterStatus === status ? "default" : "outline"}
                 className={`border-2 border-bauhaus rounded-none font-bold uppercase tracking-wide ${filterStatus === status
-                    ? 'bg-bauhaus-blue text-white'
-                    : 'bg-white hover:bg-gray-100'
+                  ? 'bg-bauhaus-blue text-white'
+                  : 'bg-white hover:bg-gray-100'
                   }`}
               >
                 {status}
@@ -297,8 +281,8 @@ export default function DashboardPage() {
                   <div className="flex gap-2 mt-2">
                     <Badge
                       className={`text-xs font-bold uppercase tracking-wide rounded-none border-2 ${project.status === 'FINAL'
-                          ? 'bg-bauhaus-blue text-white border-bauhaus'
-                          : 'bg-white text-black border-bauhaus'
+                        ? 'bg-bauhaus-blue text-white border-bauhaus'
+                        : 'bg-white text-black border-bauhaus'
                         }`}
                     >
                       {project.status}

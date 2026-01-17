@@ -82,7 +82,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <h3 className="font-bold uppercase tracking-wide mb-1">PROVE YOUR POINT</h3>
-                  <p className="font-medium opacity-90">Write 150 words of raw ideas. Let AI polish the diamond.</p>
+                  <p className="font-medium opacity-90">Write 50 words of raw ideas. Let AI polish the diamond.</p>
                 </div>
               </div>
 

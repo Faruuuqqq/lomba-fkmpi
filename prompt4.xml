@@ -1,0 +1,260 @@
+Tentu, **ada banget!** Dan kabar baiknya, banyak yang **gratis, legal (open access)**, dan punya kuota yang sangat lega untuk developer (cocok untuk lomba).
+
+Untuk fitur **"Citation Hunter"** dan **"Literasi Digital"** di NALAR.AI, saya sangat merekomendasikan **OpenAlex** atau **Semantic Scholar**.
+
+Berikut adalah 3 opsi API Gratis terbaik yang bisa kamu pakai sekarang juga:
+
+### 1. OpenAlex (Pilihan Terbaik & Paling "Open") 🏆
+
+Ini adalah database open-source yang sangat besar (lebih dari 200 juta karya ilmiah). Datanya gratis dan lisensinya CC0 (Public Domain).
+
+* **Harga:** Gratis total.
+* **Limit:** 100.000 request/hari (Sangat lebih dari cukup untuk demo).
+* **Kelebihan:** Data sangat lengkap (Jurnal, Penulis, Institusi, Topik). Tidak butuh API Key (tapi disarankan pakai email di header agar sopan).
+* **Dokumentasi:** [docs.openalex.org](https://docs.openalex.org/)
+
+### 2. Semantic Scholar API (Paling Cerdas) 🧠
+
+Dibuat oleh Allen Institute for AI. Ini sangat bagus untuk mencari "Paper yang relevan" atau "Grafik Sitasi".
+
+* **Harga:** Gratis.
+* **Limit:** Sekitar 100 request/5 menit (tanpa API Key), cukup untuk demo. Kalau mau lebih, bisa minta API Key gratis.
+* **Kelebihan:** Punya fitur "Citation Graph" yang bagus untuk fitur **Reasoning Map** kamu.
+* **Dokumentasi:** [semanticscholar.org/product/api](https://www.semanticscholar.org/product/api)
+
+### 3. DOAJ (Directory of Open Access Journals)
+
+Khusus jurnal yang benar-benar terbuka (bisa didownload PDF-nya gratis).
+
+* **Harga:** Gratis.
+* **Kelebihan:** Menjamin semua hasil pencarian adalah **Open Access** (legal dibaca publik). Bagus untuk fitur "Pojok Bacaan".
+
+---
+
+### 📥 Cara Implementasi di `AdvancedAiService`
+
+Kamu bisa langsung update file `server/src/ai/advanced-ai.service.ts` untuk menggunakan **OpenAlex**. Ini akan membuat fitur "Citation Suggestions" kamu jadi **NYATA** (bukan data palsu).
+
+**1. Install Axios (di folder server)**
+
+```bash
+npm install axios
+
+```
+
+**2. Update Kode `advanced-ai.service.ts**`
+Ganti method `getCitationSuggestions` dengan kode ini:
+
+```typescript
+import axios from 'axios';
+
+// ... kode lainnya ...
+
+async getCitationSuggestions(topic: string, content: string): Promise<CitationSuggestion[]> {
+  try {
+    // 1. Cari kata kunci utama dari topik (bisa pakai AI dulu untuk ekstrak keyword, atau langsung 'topic')
+    const query = encodeURIComponent(topic);
+    
+    // 2. Tembak API OpenAlex (Gratis!)
+    // Filter: hanya jurnal (works), ada abstrak, dan diurutkan relevansi
+    const url = `https://api.openalex.org/works?search=${query}&filter=has_abstract:true&per_page=5&mailto=faruq@example.com`; // Ganti emailmu
+
+    const response = await axios.get(url);
+    const papers = response.data.results;
+
+    // 3. Format hasil agar sesuai dengan UI kamu
+    return papers.map((paper: any) => ({
+      type: 'journal',
+      title: paper.title,
+      authors: paper.authorships.map((a: any) => a.author.display_name),
+      year: paper.publication_year,
+      relevance: 90, // OpenAlex sudah mengurutkan by relevansi
+      description: paper.abstract_inverted_index 
+        ? "Abstract available in source link." // Abstrak OpenAlex terkompresi, untuk simpel kasih link aja
+        : "No abstract available.",
+      url: paper.open_access?.oa_url || paper.doi || paper.id // Prioritaskan Link PDF Gratis
+    }));
+
+  } catch (error) {
+    console.error('Error fetching citations:', error);
+    // Fallback ke data kosong jika error (biar gak crash saat demo)
+    return [];
+  }
+}
+
+```
+
+### ✨ Skenario Demo dengan Data Asli
+
+1. User mengetik: *"Artificial Intelligence in Healthcare"*
+2. Klik tombol "Cari Referensi" (pakai token).
+3. Backend memanggil OpenAlex.
+4. Muncul list jurnal **sungguhan** tahun 2023-2024.
+5. User klik link -> Langsung terbuka PDF/Jurnal aslinya.
+
+Juri akan sangat terkesan karena aplikasimu **terhubung ke dunia nyata**, bukan cuma *chatbot* yang ngarang bebas.
+
+Ide kamu tentang **"Token System"** yang didapatkan dari **"Micro-Challenge Literasi"** itu **JENIUS**.
+
+Ini memecahkan 3 masalah sekaligus:
+
+1. **Mengatur Streak:** Streak hanya nambah kalau user menyelesaikan challenge (bukan cuma login doang).
+2. **Fitur Literasi Digital:** Memaksa user belajar (baca jurnal/artikel/kuis) dengan cara yang *fun* (demi dapat token).
+3. **Mencegah Ketergantungan AI:** User tidak bisa *spamming* AI terus-menerus. Mereka harus "membayar" dengan kepintaran mereka sendiri.
+
+Ini sangat cocok dengan tema FKMPI (Berpikir Kritis). Filosofinya: **"AI itu mahal, bayarlah dengan otakmu."**
+
+Berikut adalah rancangan **Flow & Implementasi** agar tidak "ribet" tapi tetap menantang:
+
+---
+
+### 1. Konsep: "The Intellectual Currency" (Mata Uang Intelektual)
+
+Namakan tokennya **"Nalar Points"** atau **"Brain Cells"** (biar lucu/unik).
+
+**Cara Mendapatkan Token (Earning):**
+
+1. **Daily Logic Quiz (Micro-Challenge):**
+* Setiap hari saat login, muncul Popup Kuis (5 detik).
+* *Soal:* "Manakah kalimat yang merupakan fakta?" (A/B).
+* *Reward:* **+3 Token** & **Streak Menyala 🔥**.
+
+
+2. **Write-to-Earn (Paling Penting):**
+* Setiap menulis **150 kata original** di editor -> **+1 Token**.
+* *Filosofi:* Semakin rajin nulis, semakin banyak bantuan AI yang bisa kamu pakai.
+
+
+3. **Citation Hunter (Literasi Tingkat Lanjut):**
+* Jika user kehabisan token, ada tombol "Dapatkan Token Gratis".
+* Tugas: "Baca abstrak jurnal pendek ini (2 kalimat), lalu tentukan kesimpulannya."
+* *Reward:* **+2 Token**.
+
+
+
+**Cara Menggunakan Token (Spending):**
+
+1. **Ask AI / Chat:** 1 Token/chat.
+2. **Deep Analysis (Reasoning Graph):** 3 Token.
+3. **Fallacy Check:** 2 Token.
+
+---
+
+### 2. Flow User yang "Nggak Ribet"
+
+Jangan bikin user bingung nyari menu. Gunakan sistem **Pop-up** dan **Notification**.
+
+1. **Buka Web:**
+* Muncul Modal: *"Daily Challenge: Tebak Fallacy!"*.
+* User jawab (Klik A).
+* *Benar!* -> Animasi Koin masuk dompet (+3) & Api Streak menyala 🔥.
+
+
+2. **Masuk Editor:**
+* User ngetik argumen.
+* User butuh saran, klik Sidebar AI.
+* Lihat saldo: "3 Token".
+
+
+3. **Pakai AI:**
+* User klik "Analyze". Saldo berkurang jadi 0.
+
+
+4. **Kehabisan Token:**
+* User mau tanya lagi -> Muncul pesan: *"Token habis! Tulis 100 kata lagi atau kerjakan Kuis Literasi untuk isi ulang."*
+* User terpacu untuk menulis manual atau belajar sebentar.
+
+
+
+---
+
+### 3. Implementasi Teknis (Apa yang harus diubah?)
+
+Ini cukup mudah diimplementasikan di atas struktur kodemu yang sekarang.
+
+#### A. Database Schema (`server/prisma/schema.prisma`)
+
+Tambahkan field `tokens` dan `lastDailyChallenge` di User.
+
+```prisma
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  // ... field lain
+  tokens         Int       @default(5) // Modal awal 5 token
+  currentStreak  Int       @default(0)
+  lastActive     DateTime?
+  lastChallenge  DateTime? // Untuk cek apakah hari ini sudah kuis
+}
+
+```
+
+#### B. API Endpoint Baru (`AnalyticsController` atau `GamificationController`)
+
+Buat endpoint untuk handle kuis dan token.
+
+```typescript
+// server/src/controllers/gamification.controller.ts
+
+// 1. Get Daily Challenge (Soal Kuis)
+// Return soal random dari database/json soal literasi
+export const getDailyChallenge = (req, res) => { ... }
+
+// 2. Submit Answer
+export const submitChallenge = async (req, res) => {
+  const { answer } = req.body;
+  const isCorrect = checkAnswer(answer); // Logika cek jawaban
+
+  if (isCorrect) {
+    // Tambah Token & Update Streak
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        tokens: { increment: 3 },
+        currentStreak: { increment: 1 }, // Logika streak yg bener
+        lastChallenge: new Date()
+      }
+    });
+    return res.json({ success: true, reward: 3 });
+  }
+  return res.json({ success: false });
+}
+
+// 3. Spend Token (Middleware/Guard)
+// Pasang ini sebelum akses endpoint AI
+export const checkTokenBalance = async (req, res, next) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id }});
+  if (user.tokens < 1) {
+    return res.status(402).json({ message: "Not enough tokens!" });
+  }
+  // Kurangi token
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { tokens: { decrement: 1 } }
+  });
+  next();
+}
+
+```
+
+#### C. Frontend UI
+
+1. **Navbar:** Tambahkan ikon Koin/Token di sebelah profil user.
+2. **AiSidebar:**
+* Tampilkan "Cost: 1 Token" di tombol "Send".
+* Jika saldo 0, tombol disable dan berubah jadi "Earn Tokens".
+
+
+3. **DailyChallengeModal:** Komponen popup yang muncul otomatis jika `lastChallenge` != hari ini.
+
+---
+
+### Kesimpulan Strategi
+
+Ide ini mengubah aplikasi dari sekadar "Text Editor" menjadi **"Gym Otak"**.
+
+* **Juri suka** karena ada elemen pendidikan (kuis literasi) dan kedisiplinan (streak).
+* **User suka** karena ada gamifikasi (ngumpulin token) dan tantangan.
+* **Flow Simpel:** Login -> Kuis (5 detik) -> Kerja.
+
+Apakah kamu setuju dengan skema **"Nalar Points"** ini? Kalau iya, kita bisa fokus bikin UI *Daily Challenge*-nya dulu yang simpel.

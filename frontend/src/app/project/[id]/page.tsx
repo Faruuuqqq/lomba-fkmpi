@@ -74,7 +74,7 @@ export default function ProjectPage() {
   // Confetti effect when AI unlocks
   useEffect(() => {
     const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
-    const isAiUnlocked = wordCount >= 150;
+    const isAiUnlocked = wordCount >= 50;
 
     if (wasAiLocked && isAiUnlocked) {
       // Trigger confetti
@@ -131,8 +131,8 @@ export default function ProjectPage() {
   }
 
   const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
-  const isAiUnlocked = wordCount >= 150;
-  const wordsToUnlock = Math.max(0, 150 - wordCount);
+  const isAiUnlocked = wordCount >= 50;
+  const wordsToUnlock = Math.max(0, 50 - wordCount);
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">

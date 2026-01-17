@@ -9,7 +9,7 @@ export class AiService {
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
-  ) {}
+  ) { }
 
   async analyze(projectId: string, userId: string, dto: AiAnalyzeDto) {
     const project = await this.prisma.project.findUnique({
@@ -25,7 +25,7 @@ export class AiService {
     }
 
     if (!project.isAiUnlocked) {
-      throw new Error('AI is locked. Write at least 150 words to unlock AI assistance.');
+      throw new Error('AI is locked. Write at least 50 words to unlock AI assistance.');
     }
 
     const systemPrompt = `You are MITRA, a Socratic Tutor for academic writing. Your goal is to sharpen the student's logic.
@@ -42,7 +42,7 @@ Rules:
     const userPrompt = `Current essay content:\n\n${dto.currentText}\n\nStudent's question: ${dto.userQuery}`;
 
     let aiResponse = 'AI service temporarily unavailable. Please try again later.';
-    
+
     try {
       const zAiResponse = await firstValueFrom(
         this.httpService.post(
@@ -70,7 +70,7 @@ Rules:
       aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
     } catch (error) {
       console.error('AI Service Error:', error);
-      
+
       // Handle specific API errors
       if (error?.response?.data?.error?.code === '1113') {
         aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
@@ -116,7 +116,7 @@ Rules:
 
   async generateMap(projectId: string, userId: string, dto: GenerateMapDto) {
     const startTime = Date.now();
-    
+
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
     });
@@ -169,7 +169,7 @@ Return ONLY valid JSON in this exact format:
     );
 
     const aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || '{}';
-    
+
     let graphData;
     let analysis = '';
 
@@ -218,7 +218,7 @@ Return ONLY valid JSON in this exact format:
 
   async ethicsCheck(projectId: string, userId: string, dto: EthicsCheckDto) {
     const startTime = Date.now();
-    
+
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
     });
@@ -269,7 +269,7 @@ Return ONLY valid JSON in this exact format:
     );
 
     const aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || '{}';
-    
+
     let issues = [];
     let summary = '';
 
