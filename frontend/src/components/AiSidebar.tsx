@@ -45,6 +45,29 @@ interface PlagiarismResult {
   }>;
 }
 
+interface LogicMapNode {
+  id: string;
+  type: 'premise' | 'evidence' | 'conclusion';
+  label: string;
+  position?: { x: number; y: number };
+}
+
+interface LogicMapEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  hasFallacy?: boolean;
+}
+
+interface LogicMapResult {
+  graphData: {
+    nodes: LogicMapNode[];
+    edges: LogicMapEdge[];
+  };
+  analysis: string;
+}
+
 export function AiSidebar({
   projectId,
   isLocked,
@@ -64,10 +87,13 @@ export function AiSidebar({
   // Modal states
   const [showGrammarModal, setShowGrammarModal] = useState(false);
   const [showPlagiarismModal, setShowPlagiarismModal] = useState(false);
+  const [showLogicMapModal, setShowLogicMapModal] = useState(false);
   const [grammarResult, setGrammarResult] = useState<any>(null);
   const [plagiarismResult, setPlagiarismResult] = useState<PlagiarismResult | null>(null);
+  const [logicMapResult, setLogicMapResult] = useState<LogicMapResult | null>(null);
   const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
   const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
+  const [isGeneratingMap, setIsGeneratingMap] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -168,6 +194,26 @@ export function AiSidebar({
     }
   };
 
+  const handleGenerateLogicMap = async () => {
+    if (!currentContent || currentContent.length < 50) {
+      toast.error('Write at least 50 words first');
+      return;
+    }
+
+    setIsGeneratingMap(true);
+    try {
+      const { data } = await aiAPI.generateMap(projectId, currentContent);
+      setLogicMapResult(data);
+      setShowLogicMapModal(true);
+      toast.success('Logic map generated!');
+    } catch (error) {
+      console.error('Logic map error:', error);
+      toast.error('Failed to generate logic map');
+    } finally {
+      setIsGeneratingMap(false);
+    }
+  };
+
   const progress = Math.min((wordCount / 50) * 100, 100);
 
   return (
@@ -198,8 +244,8 @@ export function AiSidebar({
           <button
             onClick={() => setActiveTab('chat')}
             className={`flex-1 px-4 py-3 font-black uppercase text-xs tracking-wide transition-colors ${activeTab === 'chat'
-                ? 'bg-white border-b-4 border-bauhaus-blue text-bauhaus-blue'
-                : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-white border-b-4 border-bauhaus-blue text-bauhaus-blue'
+              : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
             <MessageSquare className="w-4 h-4 mx-auto mb-1" strokeWidth={3} />
@@ -208,8 +254,8 @@ export function AiSidebar({
           <button
             onClick={() => setActiveTab('citations')}
             className={`flex-1 px-4 py-3 font-black uppercase text-xs tracking-wide transition-colors ${activeTab === 'citations'
-                ? 'bg-white border-b-4 border-bauhaus-yellow text-black'
-                : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-white border-b-4 border-bauhaus-yellow text-black'
+              : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
             <BookOpen className="w-4 h-4 mx-auto mb-1" strokeWidth={3} />
@@ -218,8 +264,8 @@ export function AiSidebar({
           <button
             onClick={() => setActiveTab('tools')}
             className={`flex-1 px-4 py-3 font-black uppercase text-xs tracking-wide transition-colors ${activeTab === 'tools'
-                ? 'bg-white border-b-4 border-bauhaus-red text-bauhaus-red'
-                : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-white border-b-4 border-bauhaus-red text-bauhaus-red'
+              : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
             <Wrench className="w-4 h-4 mx-auto mb-1" strokeWidth={3} />
@@ -411,13 +457,14 @@ export function AiSidebar({
               <div className="bg-white border-2 border-bauhaus p-4">
                 <h4 className="font-black uppercase text-sm mb-2">Logic Map</h4>
                 <p className="text-xs font-medium text-gray-600 mb-3">
-                  Visualize your argument structure (Coming Soon).
+                  Visualize your argument structure and identify fallacies.
                 </p>
                 <button
-                  disabled
-                  className="w-full bg-gray-300 text-gray-600 border-2 border-bauhaus font-bold uppercase text-xs py-2 cursor-not-allowed"
+                  onClick={handleGenerateLogicMap}
+                  disabled={isGeneratingMap || !currentContent}
+                  className="w-full bg-bauhaus-blue text-white border-2 border-bauhaus font-bold uppercase text-xs py-2 hover:bg-bauhaus-blue/90 disabled:opacity-50"
                 >
-                  Coming Soon
+                  {isGeneratingMap ? 'Generating...' : 'Generate Map'}
                 </button>
               </div>
             </div>
@@ -555,6 +602,100 @@ export function AiSidebar({
                     </a>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Logic Map Modal */}
+      <Modal
+        isOpen={showLogicMapModal}
+        onClose={() => setShowLogicMapModal(false)}
+        title="Logic Map - Argument Structure"
+      >
+        {logicMapResult && (
+          <div className="space-y-6">
+            {/* Analysis */}
+            <div className="p-4 bg-bauhaus-blue border-2 border-bauhaus text-white">
+              <h3 className="font-black uppercase text-sm mb-2">AI Analysis</h3>
+              <p className="text-sm font-medium leading-relaxed">{logicMapResult.analysis}</p>
+            </div>
+
+            {/* Nodes */}
+            {logicMapResult.graphData.nodes.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-black uppercase text-sm">Argument Components:</h3>
+                {logicMapResult.graphData.nodes.map((node) => {
+                  const colors = {
+                    premise: { bg: 'bg-bauhaus-yellow', border: 'border-yellow-600', icon: '📍' },
+                    evidence: { bg: 'bg-green-100', border: 'border-green-600', icon: '📊' },
+                    conclusion: { bg: 'bg-bauhaus-red', border: 'border-red-700', icon: '🎯', text: 'text-white' }
+                  };
+                  const style = colors[node.type] || colors.premise;
+
+                  return (
+                    <div
+                      key={node.id}
+                      className={`p-4 ${style.bg} border-2 ${style.border} ${'text' in style ? style.text : ''}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{style.icon}</span>
+                        <div className="flex-1">
+                          <p className="font-black uppercase text-xs mb-1">{node.type}</p>
+                          <p className="text-sm font-bold leading-relaxed">{node.label}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Edges (Connections) */}
+            {logicMapResult.graphData.edges.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-black uppercase text-sm">Logical Connections:</h3>
+                <div className="space-y-2">
+                  {logicMapResult.graphData.edges.map((edge) => {
+                    const sourceNode = logicMapResult.graphData.nodes.find(n => n.id === edge.source);
+                    const targetNode = logicMapResult.graphData.nodes.find(n => n.id === edge.target);
+
+                    return (
+                      <div
+                        key={edge.id}
+                        className={`p-3 border-2 ${edge.hasFallacy ? 'bg-red-50 border-red-500' : 'bg-white border-bauhaus'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2 text-xs font-bold">
+                          <span className="px-2 py-1 bg-gray-200 border border-bauhaus">
+                            {sourceNode?.type || 'Node'}
+                          </span>
+                          <span className="text-bauhaus-blue font-black">→ {edge.label}</span>
+                          <span className="px-2 py-1 bg-gray-200 border border-bauhaus">
+                            {targetNode?.type || 'Node'}
+                          </span>
+                          {edge.hasFallacy && (
+                            <span className="ml-auto px-2 py-1 bg-red-500 text-white font-black uppercase">
+                              ⚠ Fallacy
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {logicMapResult.graphData.nodes.length === 0 && (
+              <div className="text-center py-8">
+                <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-2" />
+                <p className="font-black uppercase">No Structure Detected</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Try writing a more structured argument with clear premises and conclusions.
+                </p>
               </div>
             )}
           </div>

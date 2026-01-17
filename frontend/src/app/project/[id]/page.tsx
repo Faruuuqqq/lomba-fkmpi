@@ -218,11 +218,11 @@ export default function ProjectPage() {
             <GamificationWidget />
             <Button
               onClick={() => setIsZenMode(true)}
-              className="border-2 border-bauhaus rounded-none hover:bg-bauhaus-blue hover:text-white transition-colors btn-press bg-white"
+              className="bg-gray-100 border-2 border-bauhaus hover:bg-bauhaus-blue hover:text-white transition-colors btn-press font-bold uppercase text-xs"
               size="sm"
             >
-              <Maximize2 className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline font-bold uppercase text-xs">Zen</span>
+              <Maximize2 className="w-4 h-4 mr-1" strokeWidth={3} />
+              <span className="hidden sm:inline">Zen</span>
             </Button>
             <Button
               onClick={handleSave}
@@ -279,14 +279,13 @@ export default function ProjectPage() {
       {/* RIGHT SIDEBAR: AI Assistant */}
       {showAiSidebar && (
         <div className="w-80 relative">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={() => setShowAiSidebar(false)}
-            className="absolute top-2 left-2 z-10 border-2 border-bauhaus rounded-none bg-white"
+            className="absolute top-4 left-2 z-10 w-8 h-8 bg-bauhaus-red border-2 border-bauhaus hover:bg-bauhaus-red/90 transition-colors flex items-center justify-center group"
+            title="Hide AI Sidebar"
           >
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+            <ChevronRight className="w-5 h-5 text-white" strokeWidth={3} />
+          </button>
           <AiSidebar
             projectId={id as string}
             isLocked={!isAiUnlocked}
@@ -301,12 +300,13 @@ export default function ProjectPage() {
 
       {/* Toggle AI Sidebar Button (when hidden) */}
       {!showAiSidebar && (
-        <Button
+        <button
           onClick={() => setShowAiSidebar(true)}
-          className="fixed right-4 top-1/2 -translate-y-1/2 bg-bauhaus-blue text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase text-xs py-6"
+          className="fixed right-4 top-1/2 -translate-y-1/2 bg-bauhaus-blue text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase text-xs px-3 py-6 hover:bg-bauhaus-blue/90 transition-all"
+          title="Show AI Sidebar"
         >
-          <ChevronLeft className="w-5 h-5" />
-        </Button>
+          <ChevronLeft className="w-5 h-5" strokeWidth={3} />
+        </button>
       )}
     </div>
   );
