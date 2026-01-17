@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Lock, Brain, User, Sparkles, BookOpen, Wrench, MessageSquare, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Send, Bot, User, Sparkles, BookOpen, Wrench, Copy, ArrowDownToLine, Coins, Brain } from 'lucide-react';
 import { AiInteraction } from '@/types';
 import { aiAPI } from '@/lib/api';
 import { Modal } from './Modal';
@@ -16,58 +16,10 @@ interface AiSidebarProps {
   chatHistory: AiInteraction[];
   onNewChat: (interaction: AiInteraction) => void;
   currentContent: string;
+  editorInstance?: any; // TipTap editor instance for insert functionality
 }
 
 type TabType = 'chat' | 'citations' | 'tools';
-
-interface Citation {
-  type: string;
-  title: string;
-  authors: string[];
-  year: number;
-  relevance: number;
-  description: string;
-  url?: string;
-}
-
-interface GrammarIssue {
-  type: string;
-  message: string;
-  suggestion: string;
-}
-
-interface PlagiarismResult {
-  similarityScore: number;
-  isOriginal: boolean;
-  sources: Array<{
-    url: string;
-    title: string;
-    similarity: number;
-  }>;
-}
-
-interface LogicMapNode {
-  id: string;
-  type: 'premise' | 'evidence' | 'conclusion';
-  label: string;
-  position?: { x: number; y: number };
-}
-
-interface LogicMapEdge {
-  id: string;
-  source: string;
-  target: string;
-  label: string;
-  hasFallacy?: boolean;
-}
-
-interface LogicMapResult {
-  graphData: {
-    nodes: LogicMapNode[];
-    edges: LogicMapEdge[];
-  };
-  analysis: string;
-}
 
 export function AiSidebar({
   projectId,
@@ -77,24 +29,12 @@ export function AiSidebar({
   chatHistory,
   onNewChat,
   currentContent,
+  editorInstance,
 }: AiSidebarProps) {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('chat');
-  const [citations, setCitations] = useState<Citation[]>([]);
-  const [citationTopic, setCitationTopic] = useState('');
-  const [isLoadingCitations, setIsLoadingCitations] = useState(false);
-
-  // Modal states
-  const [showGrammarModal, setShowGrammarModal] = useState(false);
-  const [showPlagiarismModal, setShowPlagiarismModal] = useState(false);
-  const [showLogicMapModal, setShowLogicMapModal] = useState(false);
-  const [grammarResult, setGrammarResult] = useState<any>(null);
-  const [plagiarismResult, setPlagiarismResult] = useState<PlagiarismResult | null>(null);
-  const [logicMapResult, setLogicMapResult] = useState<LogicMapResult | null>(null);
-  const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
-  const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
-  const [isGeneratingMap, setIsGeneratingMap] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
   const { stats, setShowDailyChallenge, addTokens } = useGamification();
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -118,22 +58,20 @@ export function AiSidebar({
     setIsLoading(true);
 
     try {
-      // Deduct optimistically
       addTokens(-5);
       const { data } = await aiAPI.analyze(projectId, '', userQuery);
       const newInteraction: AiInteraction = {
         id: Date.now().toString(),
         userPrompt: userQuery,
-        aiResponse: data.response,
+        aiResponse: data.analysis || data.response,
         timestamp: new Date().toISOString(),
-        projectId,
+        projectId: projectId,
       };
       onNewChat(newInteraction);
-      toast.success('Analysis complete', { duration: 2000 });
+      toast.success('Analysis complete');
     } catch (error) {
-      console.error('Error analyzing:', error);
-      toast.error('Critical analysis unavailable. Ensure minimum 50 words written.');
-      setQuery(userQuery);
+      toast.error('Analysis failed');
+      addTokens(5); // Refund on error
     } finally {
       setIsLoading(false);
     }
@@ -146,596 +84,253 @@ export function AiSidebar({
     }
   };
 
-  const handleSearchCitations = async () => {
-    if (!citationTopic.trim()) {
-      toast.error('Research topic required');
+  const insertToEditor = (text: string) => {
+    if (!editorInstance) {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
       return;
     }
 
-    setIsLoadingCitations(true);
-    try {
-      const { data } = await aiAPI.getCitations(citationTopic, currentContent);
-      setCitations(data.citations || []);
-      toast.success(`Retrieved ${data.citations?.length || 0} academic sources`);
-    } catch (error) {
-      console.error('Citation search error:', error);
-      toast.error('Citation retrieval failed');
-    } finally {
-      setIsLoadingCitations(false);
-    }
+    editorInstance.chain().focus().insertContent(`\n\n${text}\n\n`).run();
+    toast.success('Inserted to editor');
   };
-
-  const handleGrammarCheck = async () => {
-    if (!currentContent || currentContent.length < 10) {
-      toast.error('Insufficient content for analysis');
-      return;
-    }
-
-    // Check tokens (Cost: 10)
-    if (stats.tokens < 10) {
-      toast.error('Not enough tokens! Need 10.');
-      setShowDailyChallenge(true);
-      return;
-    }
-
-    setIsCheckingGrammar(true);
-    try {
-      addTokens(-10);
-      const { data } = await aiAPI.checkGrammar(projectId, currentContent);
-      setGrammarResult(data);
-      setShowGrammarModal(true);
-      toast.success('Linguistic analysis complete');
-    } catch (error) {
-      console.error('Grammar check error:', error);
-      toast.error('Grammar analysis failed');
-    } finally {
-      setIsCheckingGrammar(false);
-    }
-  };
-
-  const handlePlagiarismCheck = async () => {
-    if (!currentContent || currentContent.length < 10) {
-      toast.error('Insufficient content for originality verification');
-      return;
-    }
-
-    // Check tokens (Cost: 10)
-    if (stats.tokens < 10) {
-      toast.error('Not enough tokens! Need 10.');
-      setShowDailyChallenge(true);
-      return;
-    }
-
-    setIsCheckingPlagiarism(true);
-    try {
-      addTokens(-10);
-      const { data } = await aiAPI.checkPlagiarism(projectId, currentContent);
-      setPlagiarismResult(data);
-      setShowPlagiarismModal(true);
-      toast.success('Originality assessment complete');
-    } catch (error) {
-      console.error('Plagiarism check error:', error);
-      toast.error('Originality check failed');
-    } finally {
-      setIsCheckingPlagiarism(false);
-    }
-  };
-
-  const handleGenerateLogicMap = async () => {
-    if (!currentContent || currentContent.length < 50) {
-      toast.error('Minimum 50 words required for structural analysis');
-      return;
-    }
-
-    // Check tokens (Cost: 15)
-    if (stats.tokens < 15) {
-      toast.error('Not enough tokens! Need 15.');
-      setShowDailyChallenge(true);
-      return;
-    }
-
-    setIsGeneratingMap(true);
-    try {
-      addTokens(-15);
-      const { data } = await aiAPI.generateMap(projectId, currentContent);
-      setLogicMapResult(data);
-      setShowLogicMapModal(true);
-      toast.success('Argument structure mapped');
-    } catch (error) {
-      console.error('Logic map error:', error);
-      toast.error('Structural analysis failed');
-    } finally {
-      setIsGeneratingMap(false);
-    }
-  };
-
-  const progress = Math.min((wordCount / 50) * 100, 100);
 
   return (
-    <>
-      <div className="flex flex-col h-full bg-white border-l-4 border-bauhaus">
-        {/* Header */}
-        <div className="p-4 border-b-4 border-bauhaus bg-bauhaus-blue">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white border-2 border-bauhaus flex items-center justify-center">
-                <Brain className="w-5 h-5 text-bauhaus-blue" strokeWidth={3} />
-              </div>
-              <h2 className="font-black uppercase tracking-tight text-white">MITRA AI</h2>
-            </div>
-            {!isLocked && (
-              <div className="px-2 py-1 bg-green-500 border-2 border-bauhaus">
-                <span className="text-xs font-black text-white uppercase">ACTIVE</span>
-              </div>
-            )}
+    <aside className="w-80 h-screen bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col">
+      {/* Header with Token Balance */}
+      <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-sm uppercase tracking-tight">AI Assistant</h2>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-full">
+            <Coins className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="font-bold text-sm text-amber-700 dark:text-amber-300">{stats.tokens}</span>
           </div>
-          <p className="text-xs font-bold text-white uppercase tracking-wide">
-            Socratic Method Assistant
-          </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b-2 border-bauhaus bg-gray-50">
+        {/* Segmented Control Tabs */}
+        <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
           <button
             onClick={() => setActiveTab('chat')}
-            className={`flex-1 px-4 py-3 font-black uppercase text-xs tracking-wide transition-colors ${activeTab === 'chat'
-              ? 'bg-white border-b-4 border-bauhaus-blue text-bauhaus-blue'
-              : 'text-gray-600 hover:bg-gray-100'
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === 'chat'
+              ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
           >
-            <MessageSquare className="w-4 h-4 mx-auto mb-1" strokeWidth={3} />
+            <Brain className="w-3.5 h-3.5" />
             Chat
           </button>
           <button
             onClick={() => setActiveTab('citations')}
-            className={`flex-1 px-4 py-3 font-black uppercase text-xs tracking-wide transition-colors ${activeTab === 'citations'
-              ? 'bg-white border-b-4 border-bauhaus-yellow text-black'
-              : 'text-gray-600 hover:bg-gray-100'
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === 'citations'
+              ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
           >
-            <BookOpen className="w-4 h-4 mx-auto mb-1" strokeWidth={3} />
-            Citations
+            <BookOpen className="w-3.5 h-3.5" />
+            Refs
           </button>
           <button
             onClick={() => setActiveTab('tools')}
-            className={`flex-1 px-4 py-3 font-black uppercase text-xs tracking-wide transition-colors ${activeTab === 'tools'
-              ? 'bg-white border-b-4 border-bauhaus-red text-bauhaus-red'
-              : 'text-gray-600 hover:bg-gray-100'
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === 'tools'
+              ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-sm'
+              : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
           >
-            <Wrench className="w-4 h-4 mx-auto mb-1" strokeWidth={3} />
+            <Wrench className="w-3.5 h-3.5" />
             Tools
           </button>
         </div>
+      </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-          {/* CHAT TAB */}
-          {activeTab === 'chat' && (
-            <>
-              {isLocked ? (
-                <div className="text-center py-8 px-4">
-                  <div className="w-20 h-20 bg-bauhaus-yellow border-4 border-bauhaus shadow-bauhaus mx-auto mb-4 flex items-center justify-center">
-                    <Lock className="w-10 h-10 text-black" strokeWidth={3} />
-                  </div>
-                  <h3 className="font-black uppercase tracking-tight mb-3 text-lg">AI LOCKED</h3>
-                  <p className="text-sm font-bold mb-6">
-                    Write <span className="text-bauhaus-red text-xl font-black">{wordsToUnlock}</span> more words to unlock
+      {/* Tab Content */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Chat Tab */}
+        {activeTab === 'chat' && (
+          <>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {chatHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <Sparkles className="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700" />
+                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">
+                    Start a conversation
                   </p>
-
-                  <div className="w-full bg-gray-200 border-2 border-bauhaus h-6 mb-2 overflow-hidden">
-                    <div
-                      className="h-full bg-bauhaus-blue border-r-2 border-bauhaus transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs font-black uppercase tracking-wide">
-                    {wordCount}/50 words ({Math.round(progress)}%)
+                  <p className="text-xs text-zinc-400 dark:text-zinc-600">
+                    Ask me to challenge your arguments
                   </p>
                 </div>
               ) : (
-                <>
-                  {chatHistory.length === 0 ? (
-                    <div className="text-center py-8 px-4">
-                      <div className="w-16 h-16 bg-bauhaus-blue border-4 border-bauhaus shadow-bauhaus mx-auto mb-4 flex items-center justify-center">
-                        <Sparkles className="w-8 h-8 text-white" strokeWidth={3} />
+                chatHistory.map((chat) => (
+                  <div key={chat.id} className="space-y-3">
+                    {/* User Message */}
+                    <div className="flex gap-2 justify-end">
+                      <div className="max-w-[85%] p-3 bg-indigo-600 text-white rounded-lg rounded-tr-sm">
+                        <p className="text-sm leading-relaxed">{chat.userPrompt}</p>
                       </div>
-                      <h3 className="font-black uppercase tracking-tight mb-2">AI READY</h3>
-                      <p className="text-sm font-bold mb-4">Ask me anything!</p>
-
-                      <div className="space-y-2">
-                        <p className="text-xs font-black uppercase mb-2">Suggested Inquiries:</p>
-                        {[
-                          'Evaluate my argument structure',
-                          'Identify logical fallacies',
-                          'Strengthen my thesis'
-                        ].map((prompt, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setQuery(prompt)}
-                            className="w-full p-2 bg-white border-2 border-bauhaus hover:bg-bauhaus-yellow transition-colors text-xs font-bold text-left"
-                          >
-                            → {prompt}
-                          </button>
-                        ))}
+                      <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                       </div>
                     </div>
-                  ) : (
-                    chatHistory.map((chat) => (
-                      <div key={chat.id} className="space-y-3">
-                        <div className="flex gap-2 justify-end">
-                          <div className="max-w-[80%] p-3 bg-bauhaus-blue border-2 border-bauhaus shadow-bauhaus-sm">
-                            <p className="text-sm font-bold text-white">{chat.userPrompt}</p>
-                          </div>
-                          <div className="w-8 h-8 bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
-                            <User className="w-4 h-4" strokeWidth={3} />
-                          </div>
+
+                    {/* AI Message */}
+                    <div
+                      className="flex gap-2"
+                      onMouseEnter={() => setHoveredMessageId(chat.id)}
+                      onMouseLeave={() => setHoveredMessageId(null)}
+                    >
+                      <div className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      </div>
+                      <div className="max-w-[85%] relative group">
+                        <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg rounded-tl-sm border border-zinc-200 dark:border-zinc-700">
+                          <p className="text-sm leading-relaxed text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">
+                            {chat.aiResponse}
+                          </p>
                         </div>
 
-                        <div className="flex gap-2">
-                          <div className="w-8 h-8 bg-bauhaus-red border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
-                            <Brain className="w-4 h-4 text-white" strokeWidth={3} />
+                        {/* Hover Actions */}
+                        {hoveredMessageId === chat.id && (
+                          <div className="absolute -bottom-2 right-2 flex gap-1">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(chat.aiResponse);
+                                toast.success('Copied!');
+                              }}
+                              className="p-1.5 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-colors"
+                              title="Copy"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                            {editorInstance && (
+                              <button
+                                onClick={() => insertToEditor(chat.aiResponse)}
+                                className="p-1.5 bg-indigo-600 text-white border border-indigo-700 rounded shadow-sm hover:bg-indigo-700 transition-colors"
+                                title="Insert to Editor"
+                              >
+                                <ArrowDownToLine className="w-3 h-3" />
+                              </button>
+                            )}
                           </div>
-                          <div className="max-w-[80%] p-3 bg-white border-2 border-bauhaus shadow-bauhaus-sm">
-                            <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">
-                              {chat.aiResponse}
-                            </p>
-                          </div>
-                        </div>
+                        )}
                       </div>
-                    ))
-                  )}
-                  <div ref={chatEndRef} />
-                </>
+                    </div>
+                  </div>
+                ))
               )}
-            </>
-          )}
+              {isLoading && (
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                  </div>
+                  <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
 
-          {/* CITATIONS TAB */}
-          {activeTab === 'citations' && (
-            <div className="space-y-4">
-              <div className="bg-white border-2 border-bauhaus p-4">
-                <h3 className="font-black uppercase text-sm mb-3">Search Academic Sources</h3>
-                <input
-                  type="text"
-                  placeholder="Enter topic (e.g., 'climate change')"
-                  value={citationTopic}
-                  onChange={(e) => setCitationTopic(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchCitations()}
-                  className="w-full p-2 border-2 border-bauhaus focus:outline-none focus:border-bauhaus-blue font-medium text-sm mb-3"
-                />
-                <button
-                  onClick={handleSearchCitations}
-                  disabled={isLoadingCitations || !citationTopic.trim()}
-                  className="w-full bg-bauhaus-yellow border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase text-xs py-2 hover:bg-bauhaus-yellow/90 disabled:opacity-50"
-                >
-                  {isLoadingCitations ? 'Searching...' : 'Search Citations'}
-                </button>
-              </div>
-
-              {citations.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="font-black uppercase text-xs text-gray-600">
-                    {citations.length} Sources Found
-                  </h4>
-                  {citations.map((citation, idx) => (
-                    <div key={idx} className="bg-white border-2 border-bauhaus p-4">
-                      <div className="flex items-start gap-2 mb-2">
-                        <span className="px-2 py-0.5 bg-bauhaus-blue text-white text-xs font-black uppercase">
-                          {citation.type}
-                        </span>
-                        <span className="text-xs font-bold text-gray-600">
-                          Relevance: {citation.relevance}%
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-sm mb-1">{citation.title}</h5>
-                      <p className="text-xs font-medium text-gray-700 mb-2">
-                        {citation.authors.join(', ')} ({citation.year})
-                      </p>
-                      <p className="text-xs text-gray-600 mb-2">{citation.description}</p>
-                      {citation.url && (
-                        <a
-                          href={citation.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold text-bauhaus-blue hover:underline"
-                        >
-                          View Source →
-                        </a>
+            {/* Input Area */}
+            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
+              {isLocked ? (
+                <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-center">
+                  <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                    🔒 Write {wordsToUnlock} more words to unlock AI
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Challenge my argument..."
+                    disabled={isLoading}
+                    className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-sm"
+                    rows={3}
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-zinc-500">5 tokens per message</span>
+                    <button
+                      onClick={handleSend}
+                      disabled={!query.trim() || isLoading}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Send
+                        </>
                       )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {citations.length === 0 && !isLoadingCitations && (
-                <div className="text-center py-8 text-gray-500">
-                  <BookOpen className="w-12 h-12 mx-auto mb-2" strokeWidth={2} />
-                  <p className="text-xs font-bold uppercase">No citations yet</p>
-                  <p className="text-xs font-medium">Search for academic sources above</p>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
-          )}
+          </>
+        )}
 
-          {/* TOOLS TAB */}
-          {activeTab === 'tools' && (
-            <div className="space-y-3">
-              <div className="bg-white border-2 border-bauhaus p-4">
-                <h4 className="font-black uppercase text-sm mb-2">Grammar Check</h4>
-                <p className="text-xs font-medium text-gray-600 mb-3">
-                  Analyze your text for grammar, style, and punctuation issues.
-                </p>
-                <button
-                  onClick={handleGrammarCheck}
-                  disabled={isCheckingGrammar || !currentContent}
-                  className="w-full bg-green-500 border-2 border-bauhaus font-bold uppercase text-xs py-2 text-white hover:bg-green-600 disabled:opacity-50"
-                >
-                  {isCheckingGrammar ? 'Checking...' : 'Check Grammar'}
-                </button>
-              </div>
-
-              <div className="bg-white border-2 border-bauhaus p-4">
-                <h4 className="font-black uppercase text-sm mb-2">Plagiarism Check</h4>
-                <p className="text-xs font-medium text-gray-600 mb-3">
-                  Check originality and similarity scores.
-                </p>
-                <button
-                  onClick={handlePlagiarismCheck}
-                  disabled={isCheckingPlagiarism || !currentContent}
-                  className="w-full bg-bauhaus-red text-white border-2 border-bauhaus font-bold uppercase text-xs py-2 hover:bg-bauhaus-red/90 disabled:opacity-50"
-                >
-                  {isCheckingPlagiarism ? 'Checking...' : 'Check Originality'}
-                </button>
-              </div>
-
-              <div className="bg-white border-2 border-bauhaus p-4">
-                <h4 className="font-black uppercase text-sm mb-2">Logic Map</h4>
-                <p className="text-xs font-medium text-gray-600 mb-3">
-                  Visualize your argument structure and identify fallacies.
-                </p>
-                <button
-                  onClick={handleGenerateLogicMap}
-                  disabled={isGeneratingMap || !currentContent}
-                  className="w-full bg-bauhaus-blue text-white border-2 border-bauhaus font-bold uppercase text-xs py-2 hover:bg-bauhaus-blue/90 disabled:opacity-50"
-                >
-                  {isGeneratingMap ? 'Generating...' : 'Generate Map'}
-                </button>
-              </div>
+        {/* Citations Tab */}
+        {activeTab === 'citations' && (
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="text-center py-12">
+              <BookOpen className="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700" />
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">
+                No saved references yet
+              </p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-600">
+                Visit the Research Library to save papers
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Input Area - Only for Chat Tab */}
-        {activeTab === 'chat' && (
-          <div className="p-4 border-t-4 border-bauhaus bg-white">
-            {isLocked ? (
-              <div className="p-3 bg-gray-200 border-2 border-bauhaus text-center">
-                <p className="text-xs font-black uppercase">🔒 Write {wordsToUnlock} more words to unlock</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <textarea
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Pose your intellectual challenge..."
-                  disabled={isLoading}
-                  className="w-full p-3 border-2 border-bauhaus focus:outline-none focus:border-bauhaus-blue resize-none font-medium text-sm"
-                  rows={3}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={!query.trim() || isLoading}
-                  className="w-full bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase tracking-wider py-3 hover:bg-bauhaus-red/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      DECONSTRUCTING ARGUMENTS...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <Send className="w-4 h-4" strokeWidth={3} />
-                      CHALLENGE MY IDEA
-                    </span>
-                  )}
-                </button>
-                <p className="text-xs font-bold text-center text-gray-600 uppercase">
-                  Press Enter to send • Shift+Enter for new line
+        {/* Tools Tab */}
+        {activeTab === 'tools' && (
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-2">
+              <button className="w-full p-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 rounded-lg text-left transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-sm">Grammar Check</span>
+                  <span className="text-xs text-zinc-500">10 tokens</span>
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Analyze grammar, spelling, and style
                 </p>
-              </div>
-            )}
+              </button>
+
+              <button className="w-full p-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 rounded-lg text-left transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-sm">Plagiarism Check</span>
+                  <span className="text-xs text-zinc-500">10 tokens</span>
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Verify originality of your work
+                </p>
+              </button>
+
+              <button className="w-full p-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 rounded-lg text-left transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-sm">Logic Map</span>
+                  <span className="text-xs text-zinc-500">15 tokens</span>
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Visualize argument structure
+                </p>
+              </button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Grammar Check Modal */}
-      <Modal
-        isOpen={showGrammarModal}
-        onClose={() => setShowGrammarModal(false)}
-        title="Grammar Check Results"
-      >
-        {grammarResult && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-green-50 border-2 border-green-500">
-              <span className="font-black uppercase">Score</span>
-              <span className="text-3xl font-black text-green-600">{grammarResult.score}/100</span>
-            </div>
-
-            {grammarResult.issues && grammarResult.issues.length > 0 ? (
-              <div className="space-y-3">
-                <h3 className="font-black uppercase text-sm">Issues Found:</h3>
-                {grammarResult.issues.map((issue: GrammarIssue, idx: number) => (
-                  <div key={idx} className="p-3 bg-yellow-50 border-2 border-bauhaus">
-                    <div className="flex items-start gap-2 mb-2">
-                      <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-sm uppercase">{issue.type}</p>
-                        <p className="text-sm font-medium text-gray-700">{issue.message}</p>
-                        <p className="text-xs font-bold text-green-600 mt-1">
-                          Suggestion: {issue.suggestion}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-2" />
-                <p className="font-black uppercase">No Issues Found!</p>
-                <p className="text-sm font-medium text-gray-600">Your writing looks great.</p>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Plagiarism Check Modal */}
-      <Modal
-        isOpen={showPlagiarismModal}
-        onClose={() => setShowPlagiarismModal(false)}
-        title="Plagiarism Check Results"
-      >
-        {plagiarismResult && (
-          <div className="space-y-4">
-            <div className={`flex items-center justify-between p-4 border-2 ${plagiarismResult.isOriginal ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'
-              }`}>
-              <span className="font-black uppercase">Similarity Score</span>
-              <span className={`text-3xl font-black ${plagiarismResult.isOriginal ? 'text-green-600' : 'text-red-600'
-                }`}>
-                {plagiarismResult.similarityScore}%
-              </span>
-            </div>
-
-            <div className="p-4 bg-gray-50 border-2 border-bauhaus">
-              <p className="font-black uppercase text-sm mb-2">Verdict:</p>
-              {plagiarismResult.isOriginal ? (
-                <p className="text-sm font-bold text-green-600">✓ Content appears original</p>
-              ) : (
-                <p className="text-sm font-bold text-red-600">⚠ High similarity detected</p>
-              )}
-            </div>
-
-            {plagiarismResult.sources && plagiarismResult.sources.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-black uppercase text-sm">Potential Sources:</h3>
-                {plagiarismResult.sources.map((source, idx) => (
-                  <div key={idx} className="p-3 bg-white border-2 border-bauhaus">
-                    <p className="font-bold text-sm mb-1">{source.title}</p>
-                    <p className="text-xs font-medium text-gray-600 mb-2">
-                      Similarity: {source.similarity}%
-                    </p>
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-bold text-bauhaus-blue hover:underline"
-                    >
-                      Check Source →
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Logic Map Modal */}
-      <Modal
-        isOpen={showLogicMapModal}
-        onClose={() => setShowLogicMapModal(false)}
-        title="Logic Map - Argument Structure"
-      >
-        {logicMapResult && (
-          <div className="space-y-6">
-            {/* Analysis */}
-            <div className="p-4 bg-bauhaus-blue border-2 border-bauhaus text-white">
-              <h3 className="font-black uppercase text-sm mb-2">AI Analysis</h3>
-              <p className="text-sm font-medium leading-relaxed">{logicMapResult.analysis}</p>
-            </div>
-
-            {/* Nodes */}
-            {logicMapResult.graphData.nodes.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="font-black uppercase text-sm">Argument Components:</h3>
-                {logicMapResult.graphData.nodes.map((node) => {
-                  const colors = {
-                    premise: { bg: 'bg-bauhaus-yellow', border: 'border-yellow-600', icon: '📍' },
-                    evidence: { bg: 'bg-green-100', border: 'border-green-600', icon: '📊' },
-                    conclusion: { bg: 'bg-bauhaus-red', border: 'border-red-700', icon: '🎯', text: 'text-white' }
-                  };
-                  const style = colors[node.type] || colors.premise;
-
-                  return (
-                    <div
-                      key={node.id}
-                      className={`p-4 ${style.bg} border-2 ${style.border} ${'text' in style ? style.text : ''}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{style.icon}</span>
-                        <div className="flex-1">
-                          <p className="font-black uppercase text-xs mb-1">{node.type}</p>
-                          <p className="text-sm font-bold leading-relaxed">{node.label}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Edges (Connections) */}
-            {logicMapResult.graphData.edges.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-black uppercase text-sm">Logical Connections:</h3>
-                <div className="space-y-2">
-                  {logicMapResult.graphData.edges.map((edge) => {
-                    const sourceNode = logicMapResult.graphData.nodes.find(n => n.id === edge.source);
-                    const targetNode = logicMapResult.graphData.nodes.find(n => n.id === edge.target);
-
-                    return (
-                      <div
-                        key={edge.id}
-                        className={`p-3 border-2 ${edge.hasFallacy ? 'bg-red-50 border-red-500' : 'bg-white border-bauhaus'
-                          }`}
-                      >
-                        <div className="flex items-center gap-2 text-xs font-bold">
-                          <span className="px-2 py-1 bg-gray-200 border border-bauhaus">
-                            {sourceNode?.type || 'Node'}
-                          </span>
-                          <span className="text-bauhaus-blue font-black">→ {edge.label}</span>
-                          <span className="px-2 py-1 bg-gray-200 border border-bauhaus">
-                            {targetNode?.type || 'Node'}
-                          </span>
-                          {edge.hasFallacy && (
-                            <span className="ml-auto px-2 py-1 bg-red-500 text-white font-black uppercase">
-                              ⚠ Fallacy
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {logicMapResult.graphData.nodes.length === 0 && (
-              <div className="text-center py-8">
-                <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-2" />
-                <p className="font-black uppercase">No Structure Detected</p>
-                <p className="text-sm font-medium text-gray-600">
-                  Try writing a more structured argument with clear premises and conclusions.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-    </>
+    </aside>
   );
 }

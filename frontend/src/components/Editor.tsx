@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import { useEffect, useState, useRef } from 'react';
-import { Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo, Heading1, Heading2, Type } from 'lucide-react';
+import { Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo, Heading1, Heading2, Type, Save, Coins, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useGamification } from '@/contexts/GamificationContext';
 import { gamificationAPI } from '@/lib/api';
@@ -13,11 +13,14 @@ interface EditorProps {
   content: string;
   onUpdate: (content: string) => void;
   isLocked: boolean;
+  isSaving?: boolean;
+  lastSaved?: Date;
 }
 
-export function Editor({ content, onUpdate, isLocked }: EditorProps) {
-  const { addTokens } = useGamification();
+export function Editor({ content, onUpdate, isLocked, isSaving, lastSaved }: EditorProps) {
+  const { addTokens, stats } = useGamification();
   const [lastRewardedWordCount, setLastRewardedWordCount] = useState(0);
+  const [wordCount, setWordCount] = useState(0);
   const rewardCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
@@ -27,9 +30,12 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
     ],
     content,
     onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
       const text = editor.getText();
       onUpdate(text);
+
+      // Update word count
+      const words = text.split(/\s+/).filter(w => w.length > 0).length;
+      setWordCount(words);
 
       // Write-to-Earn: Check word count for rewards
       if (rewardCheckTimeoutRef.current) {
@@ -38,7 +44,7 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
 
       rewardCheckTimeoutRef.current = setTimeout(() => {
         checkWritingReward(editor);
-      }, 2000); // Debounce 2 seconds
+      }, 2000);
     },
     editorProps: {
       handlePaste: (view, event, slice) => {
@@ -56,7 +62,7 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
         return false;
       },
       attributes: {
-        class: 'prose prose-lg prose-slate dark:prose-invert max-w-none focus:outline-none min-h-[800px] font-serif-academic leading-relaxed text-slate-800 dark:text-slate-200',
+        class: 'prose prose-lg max-w-none focus:outline-none min-h-[600px] font-serif text-zinc-800 dark:text-zinc-200',
       },
     },
   });
@@ -66,11 +72,10 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
     if (!editorInstance) return;
 
     const currentWordCount = editorInstance.getText().split(/\s+/).filter((w: string) => w.length > 0).length;
-    const threshold = 50; // 50 words = 1 token
+    const threshold = 50;
 
     if (currentWordCount - lastRewardedWordCount >= threshold) {
       try {
-        // Call backend to reward
         const { data } = await gamificationAPI.rewardWriting(currentWordCount);
 
         if (data.success) {
@@ -95,149 +100,153 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
     }
   }, [content, editor]);
 
+  useEffect(() => {
+    if (editor) {
+      const text = editor.getText();
+      const words = text.split(/\s+/).filter(w => w.length > 0).length;
+      setWordCount(words);
+    }
+  }, [editor]);
+
   if (!editor) {
     return null;
   }
 
   return (
-    <div className="flex-1 overflow-y-auto relative flex justify-center p-4 sm:p-8 bg-slate-100 dark:bg-slate-900/50">
-      {/* A4 Paper-like Canvas */}
-      <div className="w-full max-w-[850px] min-h-[1100px] editor-paper rounded-sm px-8 sm:px-12 py-12 sm:py-16 transition-all duration-300 ease-in-out fade-in">
+    <div className="flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-900 p-4 sm:p-8">
+      {/* Floating Paper Container */}
+      <div className="max-w-[65ch] mx-auto">
+        {/* Status Bar */}
+        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-t-lg px-6 py-3 flex items-center justify-between text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Type className="w-3.5 h-3.5" />
+              <span>{wordCount} words</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Coins className="w-3.5 h-3.5 text-amber-500" />
+              <span className="font-bold text-amber-600 dark:text-amber-400">{stats.tokens} tokens</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {isSaving ? (
+              <>
+                <div className="w-3 h-3 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                <span>Saved {new Date(lastSaved).toLocaleTimeString()}</span>
+              </>
+            ) : null}
+          </div>
+        </div>
 
-        {/* Bauhaus Toolbar */}
-        <div className="mb-8 pb-4 border-b-4 border-bauhaus">
-          <div className="flex flex-wrap gap-2">
-            {/* Text Formatting */}
-            <div className="flex gap-1">
+        {/* Paper */}
+        <div className="bg-white dark:bg-zinc-800 border-x border-b border-zinc-200 dark:border-zinc-700 rounded-b-lg shadow-sm px-8 sm:px-12 py-12 sm:py-16 min-h-[800px]">
+          {/* Minimalist Toolbar */}
+          <div className="mb-8 pb-4 border-b border-zinc-200 dark:border-zinc-700">
+            <div className="flex flex-wrap gap-1">
               <button
                 onClick={() => editor.chain().focus().toggleBold().run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('bold')
-                  ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-yellow'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('bold') ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Bold (Ctrl+B)"
               >
-                <BoldIcon className="w-5 h-5" />
+                <BoldIcon className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => editor.chain().focus().toggleItalic().run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('italic')
-                  ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-yellow'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('italic') ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Italic (Ctrl+I)"
               >
-                <ItalicIcon className="w-5 h-5" />
+                <ItalicIcon className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => editor.chain().focus().toggleUnderline().run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('underline')
-                  ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-yellow'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('underline') ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Underline (Ctrl+U)"
               >
-                <UnderlineIcon className="w-5 h-5" />
+                <UnderlineIcon className="w-4 h-4" />
               </button>
-            </div>
 
-            {/* Divider */}
-            <div className="w-1 h-10 bg-bauhaus"></div>
+              <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
 
-            {/* Headings */}
-            <div className="flex gap-1">
               <button
                 onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('heading', { level: 1 })
-                  ? 'bg-bauhaus-blue text-white shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-blue hover:text-white'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('heading', { level: 1 }) ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Heading 1"
               >
-                <Heading1 className="w-5 h-5" />
+                <Heading1 className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('heading', { level: 2 })
-                  ? 'bg-bauhaus-blue text-white shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-blue hover:text-white'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('heading', { level: 2 }) ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Heading 2"
               >
-                <Heading2 className="w-5 h-5" />
+                <Heading2 className="w-4 h-4" />
               </button>
-            </div>
 
-            {/* Divider */}
-            <div className="w-1 h-10 bg-bauhaus"></div>
+              <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
 
-            {/* Lists */}
-            <div className="flex gap-1">
               <button
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('bulletList')
-                  ? 'bg-bauhaus-red text-white shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-red hover:text-white'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('bulletList') ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Bullet List"
               >
-                <List className="w-5 h-5" />
+                <List className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 disabled={isLocked}
-                className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('orderedList')
-                  ? 'bg-bauhaus-red text-white shadow-bauhaus-sm'
-                  : 'bg-white hover:bg-bauhaus-red hover:text-white'
-                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
+                className={`p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors ${editor.isActive('orderedList') ? 'bg-zinc-100 dark:bg-zinc-700' : ''
+                  } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
                 title="Numbered List"
               >
-                <ListOrdered className="w-5 h-5" />
+                <ListOrdered className="w-4 h-4" />
               </button>
-            </div>
 
-            {/* Divider */}
-            <div className="w-1 h-10 bg-bauhaus"></div>
+              <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-700 mx-1"></div>
 
-            {/* Undo/Redo */}
-            <div className="flex gap-1">
               <button
                 onClick={() => editor.chain().focus().undo().run()}
-                className="w-10 h-10 border-2 border-bauhaus rounded-none bg-white hover:bg-gray-100 flex items-center justify-center transition-all btn-press"
+                disabled={isLocked || !editor.can().undo()}
+                className="p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Undo (Ctrl+Z)"
               >
-                <Undo className="w-5 h-5" />
+                <Undo className="w-4 h-4" />
               </button>
 
               <button
                 onClick={() => editor.chain().focus().redo().run()}
-                className="w-10 h-10 border-2 border-bauhaus rounded-none bg-white hover:bg-gray-100 flex items-center justify-center transition-all btn-press"
+                disabled={isLocked || !editor.can().redo()}
+                className="p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Redo (Ctrl+Y)"
               >
-                <Redo className="w-5 h-5" />
+                <Redo className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Academic Mode Indicator */}
-            <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-white border-2 border-bauhaus">
-              <Type className="w-4 h-4" />
-              <span className="hidden sm:inline font-bold uppercase tracking-wide text-xs">ACADEMIC MODE</span>
-            </div>
           </div>
-        </div>
 
-        {/* Editor Content with Serif Font */}
-        <EditorContent editor={editor} />
+          {/* Editor Content */}
+          <EditorContent editor={editor} />
+        </div>
       </div>
     </div>
   );

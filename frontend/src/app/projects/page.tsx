@@ -61,7 +61,7 @@ export default function ProjectsPage() {
 
                             <div className="flex gap-3">
                                 <Button
-                                    onClick={() => router.push('/dashboard')}
+                                    onClick={() => router.push('/library')}
                                     className="bg-bauhaus-blue text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase tracking-wide"
                                 >
                                     <FileText className="w-4 h-4 mr-2" strokeWidth={3} />

@@ -21,7 +21,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/library');
     }
   }, [isAuthenticated, router]);
 
@@ -47,7 +47,7 @@ export default function RegisterPage() {
     try {
       setIsLoading(true);
       await register(email, password, name || undefined);
-      router.push('/dashboard');
+      router.push('/library');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to create account');
     } finally {

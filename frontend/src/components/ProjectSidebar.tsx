@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, FileText, User, Settings, LogOut, Home } from 'lucide-react';
+import { Plus, Search, FileText, User, LogOut, Home, ChevronLeft, ChevronRight } from 'lucide-react';
 import { projectsAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,7 @@ export function ProjectSidebar() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     useEffect(() => {
         loadProjects();
@@ -51,82 +52,125 @@ export function ProjectSidebar() {
     );
 
     return (
-        <div className="w-64 h-screen bg-white border-r-4 border-bauhaus flex flex-col">
+        <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-screen bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col transition-all duration-300`}>
             {/* Header */}
-            <div className="p-4 border-b-4 border-bauhaus bg-bauhaus-yellow">
-                <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-bauhaus-red border-2 border-bauhaus flex items-center justify-center">
-                        <span className="text-white font-black text-sm">M</span>
-                    </div>
-                    <h1 className="font-black uppercase tracking-tight">MITRA AI</h1>
-                </div>
+            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+                {!isCollapsed ? (
+                    <>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
+                                    <span className="text-white font-black text-sm">M</span>
+                                </div>
+                                <h1 className="font-bold text-sm uppercase tracking-tight">MITRA AI</h1>
+                            </div>
+                            <button
+                                onClick={() => setIsCollapsed(true)}
+                                className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+                                title="Collapse"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                        </div>
 
-                {/* New Project Button */}
-                <button
-                    onClick={createNewProject}
-                    className="w-full bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase tracking-wide text-xs py-3 hover:bg-bauhaus-red/90 transition-all flex items-center justify-center gap-2"
-                >
-                    <Plus className="w-4 h-4" strokeWidth={3} />
-                    NEW PROJECT
-                </button>
+                        {/* New Project Button */}
+                        <button
+                            onClick={createNewProject}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2.5 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <Plus className="w-4 h-4" strokeWidth={2.5} />
+                            New Project
+                        </button>
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
+                            <span className="text-white font-black text-sm">M</span>
+                        </div>
+                        <button
+                            onClick={createNewProject}
+                            className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md flex items-center justify-center transition-colors"
+                            title="New Project"
+                        >
+                            <Plus className="w-5 h-5" strokeWidth={2.5} />
+                        </button>
+                        <button
+                            onClick={() => setIsCollapsed(false)}
+                            className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+                            title="Expand"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Search */}
-            <div className="p-4 border-b-2 border-bauhaus">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" strokeWidth={3} />
-                    <input
-                        type="text"
-                        placeholder="Search projects..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border-2 border-bauhaus focus:outline-none focus:border-bauhaus-blue font-bold text-sm"
-                    />
+            {!isCollapsed && (
+                <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Projects List */}
             <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
                     <div className="p-4 text-center">
-                        <div className="w-8 h-8 border-4 border-bauhaus-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        <p className="text-xs font-bold mt-2 uppercase">Loading...</p>
+                        <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        {!isCollapsed && <p className="text-xs font-medium mt-2 text-zinc-500">Loading...</p>}
                     </div>
                 ) : filteredProjects.length === 0 ? (
-                    <div className="p-4 text-center">
-                        <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" strokeWidth={2} />
-                        <p className="text-xs font-bold uppercase text-gray-500">
-                            {searchQuery ? 'No projects found' : 'No projects yet'}
-                        </p>
-                    </div>
+                    !isCollapsed && (
+                        <div className="p-4 text-center">
+                            <FileText className="w-8 h-8 mx-auto mb-2 text-zinc-300" />
+                            <p className="text-xs font-medium text-zinc-500">
+                                {searchQuery ? 'No projects found' : 'No projects yet'}
+                            </p>
+                        </div>
+                    )
                 ) : (
                     <div className="p-2">
                         {filteredProjects.map((project) => (
                             <button
                                 key={project.id}
                                 onClick={() => router.push(`/project/${project.id}`)}
-                                className="w-full p-3 mb-2 bg-white border-2 border-bauhaus hover:bg-bauhaus-yellow transition-colors text-left group"
+                                className="w-full p-3 mb-1 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-left group border-l-2 border-transparent hover:border-indigo-600"
+                                title={isCollapsed ? project.title : undefined}
                             >
-                                <div className="flex items-start gap-2">
-                                    <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" strokeWidth={2.5} />
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-sm truncate group-hover:text-black">
-                                            {project.title}
-                                        </h3>
-                                        <p className="text-xs font-medium text-gray-600 mt-1">
-                                            {new Date(project.updatedAt).toLocaleDateString('id-ID', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            })}
-                                        </p>
-                                        {project.isAiUnlocked && (
-                                            <span className="inline-block mt-1 px-2 py-0.5 bg-green-500 text-white text-xs font-black uppercase">
-                                                AI ✓
-                                            </span>
-                                        )}
+                                {isCollapsed ? (
+                                    <div className="flex justify-center">
+                                        <FileText className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="flex items-start gap-2">
+                                        <FileText className="w-4 h-4 mt-0.5 flex-shrink-0 text-zinc-600 dark:text-zinc-400" />
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">
+                                                {project.title}
+                                            </h3>
+                                            <p className="text-xs text-zinc-500 mt-0.5">
+                                                {new Date(project.updatedAt).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })}
+                                            </p>
+                                            {project.isAiUnlocked && (
+                                                <span className="inline-block mt-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold rounded">
+                                                    AI ✓
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -134,32 +178,55 @@ export function ProjectSidebar() {
             </div>
 
             {/* User Profile Footer */}
-            <div className="p-4 border-t-4 border-bauhaus bg-gray-50">
-                <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-bauhaus-blue border-2 border-bauhaus flex items-center justify-center">
-                        <User className="w-4 h-4 text-white" strokeWidth={3} />
+            <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+                {!isCollapsed ? (
+                    <>
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 bg-zinc-200 dark:bg-zinc-700 rounded-full flex items-center justify-center">
+                                <User className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-xs truncate text-zinc-900 dark:text-zinc-100">User</p>
+                                <p className="text-xs text-zinc-500">Free Plan</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => router.push('/projects')}
+                                className="flex-1 p-2 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center gap-1.5 text-xs font-medium"
+                                title="Home"
+                            >
+                                <Home className="w-3.5 h-3.5" />
+                                Home
+                            </button>
+                            <button
+                                onClick={() => router.push('/login')}
+                                className="flex-1 p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5 text-xs font-medium"
+                                title="Logout"
+                            >
+                                <LogOut className="w-3.5 h-3.5" />
+                                Logout
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center gap-2">
+                        <button
+                            onClick={() => router.push('/projects')}
+                            className="w-10 h-10 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center"
+                            title="Home"
+                        >
+                            <Home className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => router.push('/login')}
+                            className="w-10 h-10 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors flex items-center justify-center"
+                            title="Logout"
+                        >
+                            <LogOut className="w-5 h-5" />
+                        </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="font-black text-xs uppercase truncate">User</p>
-                        <p className="text-xs font-medium text-gray-600">Free Plan</p>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => router.push('/projects')}
-                        className="flex-1 p-2 border-2 border-bauhaus hover:bg-bauhaus-blue hover:text-white transition-colors"
-                        title="Home"
-                    >
-                        <Home className="w-4 h-4 mx-auto" strokeWidth={2.5} />
-                    </button>
-                    <button
-                        onClick={() => router.push('/login')}
-                        className="flex-1 p-2 border-2 border-bauhaus hover:bg-bauhaus-red hover:text-white transition-colors"
-                        title="Logout"
-                    >
-                        <LogOut className="w-4 h-4 mx-auto" strokeWidth={2.5} />
-                    </button>
-                </div>
+                )}
             </div>
         </div>
     );

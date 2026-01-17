@@ -3,14 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Editor } from '@/components/Editor';
 import { AiSidebar } from '@/components/AiSidebar';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
-import { GamificationWidget } from '@/components/GamificationWidget';
 import { projectsAPI, aiAPI } from '@/lib/api';
 import { Project, AiInteraction } from '@/types';
-import { Save, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 
@@ -26,7 +24,6 @@ export default function ProjectPage() {
   const [chatHistory, setChatHistory] = useState<AiInteraction[]>([]);
   const [showProjectSidebar, setShowProjectSidebar] = useState(true);
   const [showAiSidebar, setShowAiSidebar] = useState(true);
-  const [isZenMode, setIsZenMode] = useState(false);
   const [wasAiLocked, setWasAiLocked] = useState(true);
 
   useEffect(() => {
@@ -51,7 +48,7 @@ export default function ProjectPage() {
     } catch (error) {
       console.error('Failed to load project:', error);
       toast.error('Failed to load project');
-      setIsLoading(false);
+      router.push('/projects');
     }
   };
 
@@ -60,9 +57,22 @@ export default function ProjectPage() {
 
     setIsSaving(true);
     try {
-      await projectsAPI.save(project.id, content);
-      toast.success('Saved!', { duration: 2000 });
-      await loadProject(); // Reload to get updated AI unlock status
+      const { data } = await projectsAPI.save(id as string, content);
+
+      setProject(data.project);
+
+      // Check if AI just unlocked
+      if (wasAiLocked && data.project.isAiUnlocked) {
+        setWasAiLocked(false);
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        toast.success('🎉 AI Assistant Unlocked!');
+      } else {
+        toast.success('Saved');
+      }
     } catch (error) {
       toast.error('Failed to save');
     } finally {
@@ -70,244 +80,91 @@ export default function ProjectPage() {
     }
   };
 
+  // Auto-save
+  useEffect(() => {
+    if (!project || content === project.content) return;
+
+    const timer = setTimeout(() => {
+      handleSave();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [content]);
+
   const handleNewChat = (interaction: AiInteraction) => {
     setChatHistory([...chatHistory, interaction]);
   };
 
-  const handleTitleChange = (newTitle: string) => {
-    if (project) {
-      setProject({ ...project, title: newTitle });
-    }
-  };
-
-  // Check if AI just unlocked
-  useEffect(() => {
-    if (project && wasAiLocked && project.isAiUnlocked) {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      toast.success('🎉 AI Assistant Unlocked!', { duration: 4000 });
-      setWasAiLocked(false);
-    }
-  }, [project?.isAiUnlocked, wasAiLocked]);
+  const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
+  const isAiUnlocked = project?.isAiUnlocked || false;
+  const wordsToUnlock = Math.max(0, 50 - wordCount);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
+      <div className="flex items-center justify-center h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-bauhaus-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="font-black uppercase tracking-wide">Loading Project...</p>
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Loading project...</p>
         </div>
       </div>
     );
   }
 
   if (!project) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <div className="text-center p-8 border-4 border-bauhaus shadow-bauhaus">
-          <h2 className="font-black text-xl uppercase mb-2">Project Not Found</h2>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className="mt-4 bg-bauhaus-blue text-white border-4 border-bauhaus shadow-bauhaus btn-press font-bold uppercase"
-          >
-            Back to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
-  const isAiUnlocked = wordCount >= 50;
-  const wordsToUnlock = Math.max(0, 50 - wordCount);
-
-  // Zen Mode: Hide both sidebars
-  if (isZenMode) {
-    return (
-      <div className="flex h-screen bg-gray-100 overflow-hidden">
-        {/* Zen Mode: Only Editor */}
-        <main className="flex-1 flex flex-col">
-          {/* Minimal Floating Toolbar */}
-          <div className="absolute top-4 right-4 z-10 flex gap-2">
-            <Button
-              onClick={() => setIsZenMode(false)}
-              className="bg-white border-2 border-bauhaus shadow-bauhaus btn-press font-bold uppercase text-xs"
-              size="sm"
-            >
-              <Minimize2 className="w-4 h-4 mr-1" />
-              Exit Zen
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-bold uppercase text-xs"
-              size="sm"
-            >
-              <Save className="w-4 h-4 mr-1" />
-              {isSaving ? 'Persisting...' : 'Commit'}
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-4xl mx-auto bg-white border-4 border-bauhaus shadow-bauhaus p-12">
-              <Editor
-                content={content}
-                onUpdate={setContent}
-                isLocked={!isAiUnlocked}
-              />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
       {/* LEFT SIDEBAR: Projects Navigation */}
       {showProjectSidebar && <ProjectSidebar />}
 
       {/* CENTER: Editor */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Top Bar */}
-        <div className="bg-white border-b-4 border-bauhaus px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {!showProjectSidebar && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowProjectSidebar(true)}
-                className="border-2 border-bauhaus rounded-none"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            )}
-            {showProjectSidebar && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowProjectSidebar(false)}
-                className="border-2 border-bauhaus rounded-none"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-            )}
-
-            <input
-              type="text"
-              value={project.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              onBlur={handleSave}
-              className="font-black uppercase tracking-tight text-lg border-2 border-transparent hover:border-bauhaus focus:border-bauhaus-blue focus:outline-none px-2 py-1 bg-transparent"
-            />
-
-            {isAiUnlocked && (
-              <span className="px-2 py-1 bg-green-500 border-2 border-bauhaus text-white text-xs font-black uppercase">
-                AI ✓
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase text-gray-600">
-              {wordCount} words
-            </span>
-            <GamificationWidget />
-            <Button
-              onClick={() => setIsZenMode(true)}
-              className="bg-gray-100 border-2 border-bauhaus hover:bg-bauhaus-blue hover:text-white transition-colors btn-press font-bold uppercase text-xs"
-              size="sm"
+        {/* Toggle Sidebar Buttons */}
+        <div className="absolute top-4 left-4 z-10 flex gap-2">
+          {!showProjectSidebar && (
+            <button
+              onClick={() => setShowProjectSidebar(true)}
+              className="p-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+              title="Show Projects"
             >
-              <Maximize2 className="w-4 h-4 mr-1" strokeWidth={3} />
-              <span className="hidden sm:inline">Zen</span>
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-bold uppercase text-xs"
-              size="sm"
-            >
-              <Save className="w-4 h-4 mr-1" />
-              {isSaving ? 'Persisting...' : 'Commit'}
-            </Button>
-          </div>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        {/* Editor Area - Paper-like with Serif Font */}
-        <div className="flex-1 overflow-y-auto pb-96">
-          <div className="p-8">
-            <div className="max-w-[65ch] mx-auto bg-white border-4 border-bauhaus shadow-bauhaus p-12 md:p-16 min-h-[800px]">
-              <style jsx global>{`
-              .ProseMirror {
-                font-family: 'Merriweather', 'Georgia', serif;
-                font-size: 16px;
-                line-height: 1.8;
-                color: #1a1a1a;
-              }
-              .ProseMirror h1 {
-                font-family: 'Inter', sans-serif;
-                font-weight: 900;
-                font-size: 2em;
-                margin-bottom: 0.5em;
-              }
-              .ProseMirror h2 {
-                font-family: 'Inter', sans-serif;
-                font-weight: 800;
-                font-size: 1.5em;
-                margin-top: 1em;
-                margin-bottom: 0.5em;
-              }
-              .ProseMirror p {
-                margin-bottom: 1em;
-              }
-              .ProseMirror ul, .ProseMirror ol {
-                padding-left: 1.5em;
-                margin-bottom: 1em;
-              }
-            `}</style>
-              <Editor
-                content={content}
-                onUpdate={setContent}
-                isLocked={!isAiUnlocked}
-              />
-            </div>
-          </div>
-        </div>
+        {/* Editor */}
+        <Editor
+          content={content}
+          onUpdate={setContent}
+          isLocked={!isAiUnlocked}
+          isSaving={isSaving}
+          lastSaved={project?.updatedAt ? new Date(project.updatedAt) : undefined}
+        />
       </main>
 
       {/* RIGHT SIDEBAR: AI Assistant */}
       {showAiSidebar && (
-        <div className="w-80 relative">
-          <button
-            onClick={() => setShowAiSidebar(false)}
-            className="absolute top-4 left-2 z-10 w-8 h-8 bg-bauhaus-red border-2 border-bauhaus hover:bg-bauhaus-red/90 transition-colors flex items-center justify-center group"
-            title="Hide AI Sidebar"
-          >
-            <ChevronRight className="w-5 h-5 text-white" strokeWidth={3} />
-          </button>
-          <AiSidebar
-            projectId={id as string}
-            isLocked={!isAiUnlocked}
-            wordCount={wordCount}
-            wordsToUnlock={wordsToUnlock}
-            chatHistory={chatHistory}
-            onNewChat={handleNewChat}
-            currentContent={content}
-          />
-        </div>
+        <AiSidebar
+          projectId={id as string}
+          isLocked={!isAiUnlocked}
+          wordCount={wordCount}
+          wordsToUnlock={wordsToUnlock}
+          chatHistory={chatHistory}
+          onNewChat={handleNewChat}
+          currentContent={content}
+        />
       )}
 
       {/* Toggle AI Sidebar Button (when hidden) */}
       {!showAiSidebar && (
         <button
           onClick={() => setShowAiSidebar(true)}
-          className="fixed right-4 top-1/2 -translate-y-1/2 bg-bauhaus-blue text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase text-xs px-3 py-6 hover:bg-bauhaus-blue/90 transition-all"
-          title="Show AI Sidebar"
+          className="fixed right-4 top-1/2 -translate-y-1/2 p-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition-colors"
+          title="Show AI Assistant"
         >
-          <ChevronLeft className="w-5 h-5" strokeWidth={3} />
+          <ChevronLeft className="w-5 h-5" />
         </button>
       )}
     </div>
