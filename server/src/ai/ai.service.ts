@@ -42,43 +42,115 @@ Rules:
     const userPrompt = `Current essay content:\n\n${dto.currentText}\n\nStudent's question: ${dto.userQuery}`;
 
     let aiResponse = 'AI service temporarily unavailable. Please try again later.';
-
-    try {
-      const zAiResponse = await firstValueFrom(
-        this.httpService.post(
-          'https://api.z.ai/api/paas/v4/chat/completions',
-          {
-            model: 'glm-4.5', // More cost-effective model
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-            max_tokens: 150,
-            temperature: 0.7,
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
-              'Content-Type': 'application/json',
-              'Accept-Language': 'en-US,en',
+    
+    // Use Gemini if available, otherwise try ZAI
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your-gemini-api-key-here') {
+      try {
+        const geminiResponse = await firstValueFrom(
+          this.httpService.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            {
+              contents: [
+                { 
+                  role: 'user', 
+                  parts: [{ text: userPrompt }] 
+                }
+              ],
+              generationConfig: {
+                maxOutputTokens: 150,
+                temperature: 0.7,
+              }
             },
-            timeout: 30000, // 30 second timeout
+            {
+              timeout: 30000,
+            }
+          )
+        );
+
+        aiResponse = (geminiResponse as any).data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated.';
+      } catch (geminiError) {
+        console.error('Gemini Service Error:', geminiError);
+        
+        // Fallback to ZAI if Gemini fails
+        if (process.env.ZAI_API_KEY) {
+          try {
+            const zAiResponse = await firstValueFrom(
+              this.httpService.post(
+                'https://api.z.ai/api/paas/v4/chat/completions',
+                {
+                  model: 'glm-4.5',
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt },
+                  ],
+                  max_tokens: 150,
+                  temperature: 0.7,
+                },
+                {
+                  headers: {
+                    'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Accept-Language': 'en-US,en',
+                  },
+                  timeout: 30000,
+                }
+              )
+            );
+
+            aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
+          } catch (zaiError) {
+            console.error('ZAI Service Error:', zaiError);
+            
+            if (zaiError?.response?.data?.error?.code === '1113') {
+              aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
+            } else {
+              aiResponse = 'AI service is currently experiencing issues. Please try again later.';
+            }
           }
-        )
-      );
-
-      aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
-    } catch (error) {
-      console.error('AI Service Error:', error);
-
-      // Handle specific API errors
-      if (error?.response?.data?.error?.code === '1113') {
-        aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
-      } else if (error?.code === 'ECONNABORTED' || error?.code === 'ERR_CANCELED') {
-        aiResponse = 'AI service request timed out. Please try again.';
-      } else {
-        aiResponse = 'AI service is currently experiencing issues. Please try again later.';
+        } else {
+          aiResponse = 'AI service is currently experiencing issues. Please try again later.';
+        }
       }
+    } else if (process.env.ZAI_API_KEY) {
+      // Use ZAI only if Gemini not available
+      try {
+        const zAiResponse = await firstValueFrom(
+          this.httpService.post(
+            'https://api.z.ai/api/paas/v4/chat/completions',
+            {
+              model: 'glm-4.5',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              max_tokens: 150,
+              temperature: 0.7,
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
+                'Content-Type': 'application/json',
+                'Accept-Language': 'en-US,en',
+              },
+              timeout: 30000,
+            }
+          )
+        );
+
+        aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
+      } catch (error) {
+        console.error('ZAI Service Error:', error);
+        
+        if (error?.response?.data?.error?.code === '1113') {
+          aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
+        } else if (error?.code === 'ECONNABORTED' || error?.code === 'ERR_CANCELED') {
+          aiResponse = 'AI service request timed out. Please try again.';
+        } else {
+          aiResponse = 'AI service is currently experiencing issues. Please try again later.';
+        }
+      }
+    } else {
+      aiResponse = 'No AI service configured. Please set up API keys.';
     }
 
     await this.prisma.aiInteraction.create({
