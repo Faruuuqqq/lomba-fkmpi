@@ -58,7 +58,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative Background Shapes */}
-      <div className="absolute top-8 right-8 w-40 h-40 rounded-full bg-bauhaus-red opacity-20"></div>
+      <div className="absolute top-8 right-8 w-40 h-40 rounded-none bg-bauhaus-red opacity-20"></div>
       <div className="absolute bottom-8 left-8 w-32 h-32 bg-bauhaus-yellow opacity-20 rotate-45"></div>
       <div className="absolute top-1/3 left-1/4 w-24 h-24 bg-bauhaus-blue opacity-20"></div>
 
@@ -68,7 +68,7 @@ export default function RegisterPage() {
           <div className="hidden lg:block lg:col-span-2 bg-bauhaus-red border-4 border-bauhaus shadow-bauhaus-lg p-12">
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-full bg-bauhaus-yellow border-4 border-bauhaus"></div>
+                <div className="w-10 h-10 rounded-none bg-bauhaus-yellow border-4 border-bauhaus"></div>
                 <div className="w-10 h-10 bg-white border-4 border-bauhaus"></div>
               </div>
               <h2 className="text-4xl font-black uppercase tracking-tighter text-white mb-2">
@@ -100,7 +100,7 @@ export default function RegisterPage() {
                 <div key={idx} className="flex items-start gap-4">
                   <div className="flex-shrink-0 mt-1">
                     {benefit.shape === 'circle' && (
-                      <div className="w-8 h-8 rounded-full bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-none bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center">
                         <Check className="w-5 h-5 text-bauhaus-red" strokeWidth={3} />
                       </div>
                     )}
@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
             {/* Decorative Shapes */}
             <div className="mt-12 flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-white opacity-30"></div>
+              <div className="w-16 h-16 rounded-none bg-white opacity-30"></div>
               <div className="w-12 h-12 bg-bauhaus-yellow opacity-30 rotate-45"></div>
               <div className="w-20 h-20 bg-bauhaus-blue opacity-30"></div>
             </div>
@@ -140,7 +140,7 @@ export default function RegisterPage() {
             {/* Mobile Logo */}
             <div className="lg:hidden mb-8 text-center">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-bauhaus-red"></div>
+                <div className="w-8 h-8 rounded-none bg-bauhaus-red"></div>
                 <div className="w-8 h-8 bg-bauhaus-blue"></div>
                 <div className="w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-b-[28px] border-b-bauhaus-yellow"></div>
               </div>
@@ -239,7 +239,7 @@ export default function RegisterPage() {
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    <div className="animate-spin rounded-none h-5 w-5 border-2 border-white border-t-transparent" />
                     <span>CREATING ACCOUNT...</span>
                   </div>
                 ) : (

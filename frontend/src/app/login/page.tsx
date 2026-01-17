@@ -52,7 +52,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative Background Shapes */}
-      <div className="absolute top-12 left-12 w-32 h-32 rounded-full bg-bauhaus-yellow opacity-20"></div>
+      <div className="absolute top-12 left-12 w-32 h-32 rounded-none bg-bauhaus-yellow opacity-20"></div>
       <div className="absolute bottom-12 right-12 w-40 h-40 bg-bauhaus-blue opacity-20 rotate-45"></div>
       <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-bauhaus-red opacity-20"></div>
 
@@ -63,7 +63,7 @@ export default function LoginPage() {
             {/* Geometric Logo */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-12 h-12 rounded-full bg-bauhaus-red border-4 border-bauhaus"></div>
+                <div className="w-12 h-12 rounded-none bg-bauhaus-red border-4 border-bauhaus"></div>
                 <div className="w-12 h-12 bg-bauhaus-yellow border-4 border-bauhaus"></div>
                 <div className="w-0 h-0 border-l-[24px] border-l-transparent border-r-[24px] border-r-transparent border-b-[42px] border-b-white"></div>
               </div>
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
             <div className="space-y-6 text-white">
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-none bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
                   <Circle className="w-4 h-4 text-bauhaus-blue" fill="currentColor" />
                 </div>
                 <div>
@@ -116,7 +116,7 @@ export default function LoginPage() {
             {/* Mobile Logo */}
             <div className="lg:hidden mb-8 text-center">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-bauhaus-red"></div>
+                <div className="w-8 h-8 rounded-none bg-bauhaus-red"></div>
                 <div className="w-8 h-8 bg-bauhaus-blue"></div>
                 <div className="w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-b-[28px] border-b-bauhaus-yellow"></div>
               </div>
@@ -182,7 +182,7 @@ export default function LoginPage() {
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    <div className="animate-spin rounded-none h-5 w-5 border-2 border-white border-t-transparent" />
                     <span>SIGNING IN...</span>
                   </div>
                 ) : (

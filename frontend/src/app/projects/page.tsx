@@ -28,16 +28,16 @@ export default function ProjectsPage() {
                 <div className="flex-1 overflow-auto">
                     <div className="max-w-5xl mx-auto p-8 space-y-8">
                         {/* Hero Section */}
-                        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm p-8">
+                        <div className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none shadow-bauhaus-lg-bauhaus p-8">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-indigo-600 rounded-none flex items-center justify-center">
                                         <span className="text-white font-black text-xl">M</span>
                                     </div>
-                                    <div className="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-amber-500 rounded-none flex items-center justify-center">
                                         <span className="text-white font-black text-xl">+</span>
                                     </div>
-                                    <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-indigo-600 rounded-none flex items-center justify-center">
                                         <span className="text-white font-black text-xl">A</span>
                                     </div>
                                 </div>
@@ -57,7 +57,7 @@ export default function ProjectsPage() {
                             <div className="flex gap-3">
                                 <Button
                                     onClick={() => router.push('/library')}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold uppercase tracking-wide shadow-sm"
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-none font-semibold uppercase tracking-wide shadow-bauhaus-lg-bauhaus"
                                 >
                                     <BookOpen className="w-4 h-4 mr-2" />
                                     Explore Research Library
@@ -65,7 +65,7 @@ export default function ProjectsPage() {
                                 <Button
                                     onClick={() => router.push('/')}
                                     variant="outline"
-                                    className="border-zinc-300 dark:border-zinc-700 rounded-lg font-semibold uppercase tracking-wide hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                    className="border-4 border-bauhaus dark:border-zinc-700 rounded-none font-semibold uppercase tracking-wide hover:bg-zinc-50 dark:hover:bg-zinc-800"
                                 >
                                     Learn More
                                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -81,9 +81,9 @@ export default function ProjectsPage() {
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Step 1 */}
-                                <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm p-6 flex gap-4">
+                                <div className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none shadow-bauhaus-lg-bauhaus p-6 flex gap-4">
                                     <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                                        <div className="w-10 h-10 bg-indigo-600 rounded-none flex items-center justify-center">
                                             <span className="text-white font-black text-lg">1</span>
                                         </div>
                                     </div>
@@ -96,9 +96,9 @@ export default function ProjectsPage() {
                                 </div>
 
                                 {/* Step 2 */}
-                                <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm p-6 flex gap-4">
+                                <div className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none shadow-bauhaus-lg-bauhaus p-6 flex gap-4">
                                     <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
+                                        <div className="w-10 h-10 bg-amber-500 rounded-none flex items-center justify-center">
                                             <span className="text-white font-black text-lg">2</span>
                                         </div>
                                     </div>
@@ -111,9 +111,9 @@ export default function ProjectsPage() {
                                 </div>
 
                                 {/* Step 3 */}
-                                <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm p-6 flex gap-4">
+                                <div className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none shadow-bauhaus-lg-bauhaus p-6 flex gap-4">
                                     <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                                        <div className="w-10 h-10 bg-indigo-600 rounded-none flex items-center justify-center">
                                             <span className="text-white font-black text-lg">3</span>
                                         </div>
                                     </div>
@@ -126,9 +126,9 @@ export default function ProjectsPage() {
                                 </div>
 
                                 {/* Step 4 */}
-                                <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm p-6 flex gap-4">
+                                <div className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none shadow-bauhaus-lg-bauhaus p-6 flex gap-4">
                                     <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                        <div className="w-10 h-10 bg-green-600 rounded-none flex items-center justify-center">
                                             <span className="text-white font-black text-lg">4</span>
                                         </div>
                                     </div>
@@ -145,7 +145,7 @@ export default function ProjectsPage() {
                         {/* Key Features */}
                         <div>
                             <h3 className="text-xl font-black uppercase mb-4">Key Features</h3>
-                            <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 border border-indigo-500 rounded-lg shadow-sm p-6 text-white">
+                            <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 border border-indigo-500 rounded-none shadow-bauhaus-lg-bauhaus p-6 text-white">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="flex items-start gap-3">
                                         <CheckCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />

@@ -99,12 +99,12 @@ export function DailyChallengeModal({ isOpen, onClose, onComplete }: DailyChalle
                 <CardContent className="p-6">
                     {isLoading ? (
                         <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-bauhaus-red border-t-transparent mx-auto mb-4"></div>
+                            <div className="animate-spin rounded-none h-12 w-12 border-4 border-bauhaus-red border-t-transparent mx-auto mb-4"></div>
                             <p className="font-bold uppercase tracking-wide">LOADING CHALLENGE...</p>
                         </div>
                     ) : !challengeData?.available ? (
                         <div className="text-center py-8">
-                            <div className="w-16 h-16 rounded-full bg-bauhaus-blue mx-auto mb-4 flex items-center justify-center">
+                            <div className="w-16 h-16 rounded-none bg-bauhaus-blue mx-auto mb-4 flex items-center justify-center">
                                 <Check className="w-8 h-8 text-white" />
                             </div>
                             <p className="font-bold uppercase tracking-wide mb-4">{challengeData?.message}</p>
@@ -117,7 +117,7 @@ export function DailyChallengeModal({ isOpen, onClose, onComplete }: DailyChalle
                         </div>
                     ) : result ? (
                         <div className="text-center py-4">
-                            <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${result.isCorrect ? 'bg-bauhaus-yellow' : 'bg-bauhaus-red'
+                            <div className={`w-20 h-20 rounded-none mx-auto mb-4 flex items-center justify-center ${result.isCorrect ? 'bg-bauhaus-yellow' : 'bg-bauhaus-red'
                                 }`}>
                                 {result.isCorrect ? (
                                     <Check className="w-10 h-10 text-black" />

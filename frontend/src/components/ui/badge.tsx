@@ -3,21 +3,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-none border-2 border-bauhaus px-3 py-1 text-xs font-black uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-bauhaus focus:ring-offset-0",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-bauhaus bg-bauhaus-red text-white hover:bg-bauhaus-red/90",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-bauhaus bg-bauhaus-blue text-white hover:bg-bauhaus-blue/90",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
+          "border-bauhaus bg-black text-white hover:bg-gray-800",
+        outline: "border-bauhaus bg-transparent text-bauhaus hover:bg-bauhaus-yellow",
         success:
-          "border-transparent bg-green-500 text-white hover:bg-green-600",
+          "border-bauhaus bg-green-600 text-white hover:bg-green-700",
         warning:
-          "border-transparent bg-yellow-500 text-white hover:bg-yellow-600",
+          "border-bauhaus bg-bauhaus-yellow text-bauhaus hover:bg-yellow-400",
       },
     },
     defaultVariants: {

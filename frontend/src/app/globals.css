@@ -83,7 +83,12 @@
 
   /* Button Press Effect */
   .btn-press {
-    @apply active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+    transition: all 0.1s ease-out;
+  }
+
+  .btn-press:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
   }
 
   /* Bauhaus Colors */
@@ -113,6 +118,8 @@
 
   .border-bauhaus {
     border-color: #121212;
+    border-width: 4px;
+    border-style: solid;
   }
 
   /* Geometric Shapes */

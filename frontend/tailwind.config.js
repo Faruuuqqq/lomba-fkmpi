@@ -51,11 +51,28 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Bauhaus color system
+        bauhaus: "#121212",
+        "bauhaus-red": "#D02020",
+        "bauhaus-blue": "#1040C0",
+        "bauhaus-yellow": "#F0C020",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        none: "0px",
+        bauhaus: "0px",
+      },
+      borderWidth: {
+        bauhaus: "4px",
+      },
+      boxShadow: {
+        bauhaus: "4px 4px 0px 0px #121212",
+        "bauhaus-sm": "3px 3px 0px 0px #121212",
+        "bauhaus-md": "4px 4px 0px 0px #121212",
+        "bauhaus-lg": "6px 6px 0px 0px #121212",
+        "bauhaus-xl": "8px 8px 0px 0px #121212",
       },
       keyframes: {
         "accordion-down": {
@@ -66,10 +83,15 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "btn-press": {
+          "0%": { transform: "translate(0, 0)" },
+          "100%": { transform: "translate(2px, 2px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "btn-press": "btn-press 0.1s ease-out",
       },
     },
   },

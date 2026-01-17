@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Search, BookOpen, Save, ExternalLink, Sparkles, ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { aiAPI } from '@/lib/api';
+import { aiAPI, libraryAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -24,6 +24,7 @@ export default function LibraryPage() {
   const [query, setQuery] = useState('');
   const [papers, setPapers] = useState<Paper[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const handleSearch = async () => {
     if (!query.trim()) {
@@ -45,8 +46,24 @@ export default function LibraryPage() {
   };
 
   const handleSavePaper = async (paper: Paper) => {
-    // TODO: Implement save to user library
-    toast.success(`📚 Saved to your library!`);
+    setSavingId(paper.id);
+    try {
+      await libraryAPI.save({
+        paperId: paper.id,
+        title: paper.title,
+        authors: paper.authors,
+        year: paper.year,
+        description: paper.description,
+        url: paper.url,
+        type: paper.type,
+        relevance: paper.relevance
+      });
+      toast.success(`📚 Saved to your library!`);
+    } catch (error) {
+      toast.error('Failed to save paper');
+    } finally {
+      setSavingId(null);
+    }
   };
 
   return (
@@ -205,9 +222,14 @@ export default function LibraryPage() {
                   <div className="flex gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-700">
                     <Button
                       onClick={() => handleSavePaper(paper)}
+                      disabled={savingId === paper.id}
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase text-xs rounded-lg shadow-sm"
                     >
-                      <Save className="w-4 h-4 mr-2" />
+                      {savingId === paper.id ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
                       Save to Library
                     </Button>
                     {paper.url && (
