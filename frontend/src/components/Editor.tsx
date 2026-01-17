@@ -9,6 +9,7 @@ import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import { useEffect } from 'react';
 import { Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo, Heading1, Heading2, Type } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface EditorProps {
   content: string;
@@ -39,7 +40,10 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
 
         if (isLocked && wordCount > 20) {
           event.preventDefault();
-          alert('Zona Inisiasi: Mohon ketik gagasanmu sendiri, jangan copy-paste blok teks besar (>20 kata).');
+          toast('⚠️ Please type your own ideas instead of pasting large blocks of text (>20 words).', {
+            icon: '✍️',
+            duration: 5000,
+          });
           return true;
         }
         return false;
@@ -74,8 +78,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleBold().run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('bold')
-                    ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-yellow'
+                  ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-yellow'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Bold (Ctrl+B)"
               >
@@ -86,8 +90,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleItalic().run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('italic')
-                    ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-yellow'
+                  ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-yellow'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Italic (Ctrl+I)"
               >
@@ -98,8 +102,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleUnderline().run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('underline')
-                    ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-yellow'
+                  ? 'bg-bauhaus-yellow shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-yellow'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Underline (Ctrl+U)"
               >
@@ -116,8 +120,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('heading', { level: 1 })
-                    ? 'bg-bauhaus-blue text-white shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-blue hover:text-white'
+                  ? 'bg-bauhaus-blue text-white shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-blue hover:text-white'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Heading 1"
               >
@@ -128,8 +132,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('heading', { level: 2 })
-                    ? 'bg-bauhaus-blue text-white shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-blue hover:text-white'
+                  ? 'bg-bauhaus-blue text-white shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-blue hover:text-white'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Heading 2"
               >
@@ -146,8 +150,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('bulletList')
-                    ? 'bg-bauhaus-red text-white shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-red hover:text-white'
+                  ? 'bg-bauhaus-red text-white shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-red hover:text-white'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Bullet List"
               >
@@ -158,8 +162,8 @@ export function Editor({ content, onUpdate, isLocked }: EditorProps) {
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 disabled={isLocked}
                 className={`w-10 h-10 border-2 border-bauhaus rounded-none flex items-center justify-center transition-all ${editor.isActive('orderedList')
-                    ? 'bg-bauhaus-red text-white shadow-bauhaus-sm'
-                    : 'bg-white hover:bg-bauhaus-red hover:text-white'
+                  ? 'bg-bauhaus-red text-white shadow-bauhaus-sm'
+                  : 'bg-white hover:bg-bauhaus-red hover:text-white'
                   } ${isLocked ? 'opacity-40 cursor-not-allowed' : 'btn-press'}`}
                 title="Numbered List"
               >

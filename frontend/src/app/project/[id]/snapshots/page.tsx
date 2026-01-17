@@ -10,12 +10,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { projectsAPI } from '@/lib/api';
 import { ProjectSnapshot } from '@/types';
 import { ArrowLeft, History, Calendar } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function SnapshotsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  
+
   const [project, setProject] = useState<any>(null);
   const [snapshots, setSnapshots] = useState<ProjectSnapshot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +35,7 @@ export default function SnapshotsPage() {
   const fetchProjectAndSnapshots = async (projectId: string) => {
     try {
       setIsLoading(true);
-      
+
       const [projectResponse, snapshotsResponse] = await Promise.all([
         projectsAPI.getOne(projectId),
         projectsAPI.getSnapshots(projectId)
@@ -44,7 +45,7 @@ export default function SnapshotsPage() {
       setSnapshots(snapshotsResponse.data);
     } catch (error) {
       console.error('Error fetching data:', error);
-      alert('Failed to load snapshots');
+      toast.error('Failed to load snapshots. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -171,14 +172,14 @@ export default function SnapshotsPage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={() => router.push(`/project/${id}`)}
                 >
                   Back to Editor
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => router.push('/dashboard')}
                 >

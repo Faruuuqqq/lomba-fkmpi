@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Send, Lock, Unlock, Bot, User, Sparkles } from 'lucide-react';
 import { AiInteraction } from '@/types';
 import { aiAPI } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 interface AiSidebarProps {
   projectId: string;
@@ -42,7 +43,7 @@ export function AiSidebar({
       setQuery('');
     } catch (error) {
       console.error('Error analyzing:', error);
-      alert('Failed to get AI response. Make sure you have written at least 50 words.');
+      toast.error('Failed to get AI response. Make sure you have written at least 50 words.');
     } finally {
       setIsLoading(false);
     }

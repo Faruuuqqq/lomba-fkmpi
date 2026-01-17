@@ -12,6 +12,7 @@ import { Project } from '@/types';
 import { Plus, FileText, LogOut, Trash2, Search, Circle, Square, Flame, Coins } from 'lucide-react';
 import { DailyChallengeModal } from '@/components/DailyChallengeModal';
 import { useDebounce } from '@/hooks/useDebounce';
+import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -87,21 +88,21 @@ export default function DashboardPage() {
       router.push(`/project/${data.id}`);
     } catch (error) {
       console.error('Error creating project:', error);
-      alert('Failed to create project');
+      toast.error('Failed to create project. Please try again.');
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+    if (!confirm('⚠️ Delete this project? This action cannot be undone.')) return;
 
     try {
       await projectsAPI.delete(id);
       setProjects(projects.filter(p => p.id !== id));
     } catch (error) {
       console.error('Error deleting project:', error);
-      alert('Failed to delete project');
+      toast.error('Failed to delete project. Please try again.');
     }
   };
 

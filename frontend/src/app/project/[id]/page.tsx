@@ -135,55 +135,87 @@ export default function ProjectPage() {
   const wordsToUnlock = Math.max(0, 50 - wordCount);
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-white overflow-hidden">
       {/* LEFT: Navigation Sidebar (Collapsible) - Hidden on mobile and in Zen Mode */}
       {!isZenMode && (
-        <aside className="hidden md:flex w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex-col">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+        <aside className="hidden md:flex w-64 border-r-4 border-bauhaus bg-white flex-col">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b-4 border-bauhaus bg-bauhaus-yellow">
+            {/* Logo - Matching Homepage */}
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
-                <BookOpen className="w-5 h-5 text-white" />
+              <div className="relative h-8 w-20 flex items-center">
+                <div className="absolute left-0 top-0 bottom-0 w-8 bg-bauhaus-blue border-2 border-bauhaus flex items-center justify-center">
+                  <span className="text-white font-black text-base">M</span>
+                </div>
+                <svg className="absolute left-6 top-0 w-10 h-8" viewBox="0 0 40 32">
+                  <polygon points="20,0 0,32 40,32" fill="#D02020" stroke="#121212" strokeWidth="2" />
+                  <text x="20" y="24" textAnchor="middle" fill="white" fontSize="16" fontWeight="900">A</text>
+                </svg>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-bauhaus-yellow border-2 border-bauhaus"></div>
               </div>
-              <h1 className="font-bold text-lg bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                MITRA AI
-              </h1>
+              <span className="font-black uppercase tracking-tighter">MITRA AI</span>
             </div>
+
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => router.push('/dashboard')}
-              className="w-full"
+              className="w-full bg-white border-2 border-bauhaus shadow-bauhaus-sm btn-press font-bold uppercase tracking-wide text-xs rounded-none hover:bg-gray-100"
+              size="sm"
             >
-              ← Back to Dashboard
+              ← DASHBOARD
             </Button>
           </div>
 
+          {/* Project Info */}
           <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-2">
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 rounded-lg">
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2 truncate">
+            <div className="space-y-4">
+              {/* Title Card */}
+              <div className="p-4 bg-white border-4 border-bauhaus shadow-bauhaus">
+                <h3 className="font-black uppercase tracking-tight text-sm mb-3 truncate">
                   {project.title}
                 </h3>
-                <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
-                  <div className="flex justify-between">
-                    <span>Words:</span>
-                    <span className="font-medium text-indigo-600 dark:text-indigo-400">{wordCount}</span>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold uppercase">Words:</span>
+                    <span className="font-black text-bauhaus-blue text-base">{wordCount}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <span className="font-medium">{project.status}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold uppercase">Status:</span>
+                    <div className={`px-2 py-1 border-2 border-bauhaus ${project.status === 'FINAL' ? 'bg-green-500 text-white' : 'bg-bauhaus-yellow'
+                      }`}>
+                      <span className="font-bold text-xs">{project.status}</span>
+                    </div>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold uppercase">AI:</span>
+                    <div className={`px-2 py-1 border-2 border-bauhaus ${isAiUnlocked ? 'bg-green-500 text-white' : 'bg-gray-300'
+                      }`}>
+                      <span className="font-bold text-xs">{isAiUnlocked ? 'UNLOCKED' : 'LOCKED'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 bg-bauhaus-blue border-2 border-bauhaus text-center">
+                  <div className="text-2xl font-black text-white">{wordCount}</div>
+                  <div className="text-xs font-bold text-white uppercase">Words</div>
+                </div>
+                <div className="p-3 bg-bauhaus-red border-2 border-bauhaus text-center">
+                  <div className="text-2xl font-black text-white">{wordsToUnlock}</div>
+                  <div className="text-xs font-bold text-white uppercase">To Go</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-            <div className="text-xs text-slate-500 dark:text-slate-400">
+          {/* Footer */}
+          <div className="p-4 border-t-4 border-bauhaus bg-gray-100">
+            <div className="text-xs font-bold uppercase tracking-wide text-center">
               {lastSaved ? (
-                <p>Saved {lastSaved.toLocaleTimeString()}</p>
+                <p>✓ Saved {lastSaved.toLocaleTimeString()}</p>
               ) : (
-                <p>Not saved yet</p>
+                <p>⚠️ Not saved yet</p>
               )}
             </div>
           </div>
@@ -194,23 +226,23 @@ export default function ProjectPage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Top Toolbar - Hidden in Zen Mode */}
         {!isZenMode && (
-          <div className="bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+          <div className="bg-white border-b-4 border-bauhaus px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="md:hidden"
+                className="md:hidden border-2 border-bauhaus rounded-none"
               >
                 {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
 
               <div>
-                <h2 className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
+                <h2 className="font-black uppercase tracking-tight text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
                   {project.title}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {wordCount} words {isAiUnlocked && '• AI Unlocked'}
+                <p className="text-xs font-bold">
+                  {wordCount} words {isAiUnlocked && '• ✓ AI UNLOCKED'}
                 </p>
               </div>
             </div>
@@ -218,7 +250,7 @@ export default function ProjectPage() {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => setIsZenMode(!isZenMode)}
-                className="border-2 border-bauhaus rounded-none hover:bg-bauhaus-blue hover:text-white transition-colors btn-press"
+                className="border-2 border-bauhaus rounded-none hover:bg-bauhaus-blue hover:text-white transition-colors btn-press bg-white"
                 size="sm"
                 title={isZenMode ? "Exit Focus Mode" : "Enter Focus Mode"}
               >
