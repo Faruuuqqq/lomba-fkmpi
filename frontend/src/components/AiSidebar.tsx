@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Send, Lock, Unlock, Bot, User, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, Lock, Brain, User, Sparkles } from 'lucide-react';
 import { AiInteraction } from '@/types';
 import { aiAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -25,157 +25,203 @@ export function AiSidebar({
 }: AiSidebarProps) {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new message arrives
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
 
   const handleSend = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || isLocked) return;
 
+    const userQuery = query.trim();
+    setQuery(''); // Clear immediately for better UX
     setIsLoading(true);
+
     try {
-      const { data } = await aiAPI.analyze(projectId, '', query);
+      const { data } = await aiAPI.analyze(projectId, '', userQuery);
       const newInteraction: AiInteraction = {
         id: Date.now().toString(),
-        userPrompt: query,
+        userPrompt: userQuery,
         aiResponse: data.response,
         timestamp: new Date().toISOString(),
         projectId,
       };
       onNewChat(newInteraction);
-      setQuery('');
+      toast.success('AI responded!', { duration: 2000 });
     } catch (error) {
       console.error('Error analyzing:', error);
       toast.error('Failed to get AI response. Make sure you have written at least 50 words.');
+      setQuery(userQuery); // Restore query on error
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
   const progress = Math.min((wordCount / 50) * 100, 100);
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-xl">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-semibold flex items-center gap-2 text-slate-900 dark:text-slate-100">
-            <div className="p-1.5 bg-indigo-600 rounded-lg">
-              <Bot className="w-4 h-4 text-white" />
+    <div className="flex flex-col h-full bg-white border-l-4 border-bauhaus">
+      {/* Header - Bauhaus Style */}
+      <div className="p-4 border-b-4 border-bauhaus bg-bauhaus-blue">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white border-2 border-bauhaus flex items-center justify-center">
+              <Brain className="w-5 h-5 text-bauhaus-blue" strokeWidth={3} />
             </div>
-            <span className="text-sm">AI Assistant</span>
-          </h2>
+            <h2 className="font-black uppercase tracking-tight text-white">MITRA AI</h2>
+          </div>
           {!isLocked && (
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-teal-100 dark:bg-teal-900/30 rounded-full">
-              <Unlock className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-              <span className="text-xs font-medium text-teal-700 dark:text-teal-300">Active</span>
+            <div className="px-2 py-1 bg-green-500 border-2 border-bauhaus">
+              <span className="text-xs font-black text-white uppercase">ACTIVE</span>
             </div>
           )}
         </div>
-
-        {/* Tab-like Navigation */}
-        <div className="flex gap-2 text-xs mt-3">
-          <button className="px-3 py-1.5 bg-white dark:bg-slate-900 rounded-md shadow-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-            Chat
-          </button>
-          <button className="px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 rounded-md transition-colors">
-            Logic Map
-          </button>
-          <button className="px-3 py-1.5 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 rounded-md transition-colors">
-            Ethics
-          </button>
-        </div>
+        <p className="text-xs font-bold text-white uppercase tracking-wide">
+          Socratic Method Assistant
+        </p>
       </div>
 
       {/* Chat Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {isLocked ? (
+          /* Locked State - Bauhaus */
           <div className="text-center py-8 px-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl mb-4">
-              <Lock className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            <div className="w-20 h-20 bg-bauhaus-yellow border-4 border-bauhaus shadow-bauhaus mx-auto mb-4 flex items-center justify-center">
+              <Lock className="w-10 h-10 text-black" strokeWidth={3} />
             </div>
-            <h3 className="font-semibold mb-2 text-slate-900 dark:text-slate-100">AI Locked</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              Write at least <span className="font-semibold text-indigo-600 dark:text-indigo-400">50 words</span> to unlock AI assistance
+            <h3 className="font-black uppercase tracking-tight mb-3 text-lg">AI LOCKED</h3>
+            <p className="text-sm font-bold mb-6">
+              Write <span className="text-bauhaus-red text-xl font-black">{wordsToUnlock}</span> more words to unlock
             </p>
 
-            {/* Progress Bar */}
-            <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-3 mb-2 overflow-hidden">
+            {/* Progress Bar - Bauhaus */}
+            <div className="w-full bg-gray-200 border-2 border-bauhaus h-6 mb-2 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                className="h-full bg-bauhaus-blue border-r-2 border-bauhaus transition-all duration-300"
                 style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse" />
-              </div>
+              />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {wordCount}/50 words ({wordsToUnlock} more to unlock)
+            <p className="text-xs font-black uppercase tracking-wide">
+              {wordCount}/50 words ({Math.round(progress)}%)
             </p>
+
+            {/* Instruction */}
+            <div className="mt-6 p-4 bg-white border-2 border-bauhaus text-left">
+              <p className="text-xs font-bold uppercase mb-2">💡 How to unlock:</p>
+              <ol className="text-xs space-y-1 font-medium">
+                <li>1. Type your original ideas in the editor</li>
+                <li>2. Reach 50 words minimum</li>
+                <li>3. AI will unlock automatically</li>
+              </ol>
+            </div>
           </div>
         ) : (
+          /* Chat Messages */
           <>
-            {chatHistory.length === 0 && (
+            {chatHistory.length === 0 ? (
               <div className="text-center py-8 px-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl mb-4">
-                  <Sparkles className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                <div className="w-16 h-16 bg-bauhaus-blue border-4 border-bauhaus shadow-bauhaus mx-auto mb-4 flex items-center justify-center">
+                  <Sparkles className="w-8 h-8 text-white" strokeWidth={3} />
                 </div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Start a conversation with MITRA AI</p>
-                <p className="text-xs text-slate-500 dark:text-slate-500">Ask for feedback on your essay</p>
+                <h3 className="font-black uppercase tracking-tight mb-2">AI READY</h3>
+                <p className="text-sm font-bold mb-4">Ask me anything about your writing!</p>
+
+                {/* Quick Prompts */}
+                <div className="space-y-2">
+                  <p className="text-xs font-black uppercase mb-2">Quick Prompts:</p>
+                  {[
+                    'Is my argument strong?',
+                    'Check for logical fallacies',
+                    'Suggest improvements'
+                  ].map((prompt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setQuery(prompt)}
+                      className="w-full p-2 bg-white border-2 border-bauhaus hover:bg-bauhaus-yellow transition-colors text-xs font-bold text-left"
+                    >
+                      → {prompt}
+                    </button>
+                  ))}
+                </div>
               </div>
+            ) : (
+              chatHistory.map((chat) => (
+                <div key={chat.id} className="space-y-3">
+                  {/* User Message */}
+                  <div className="flex gap-2 justify-end">
+                    <div className="max-w-[80%] p-3 bg-bauhaus-blue border-2 border-bauhaus shadow-bauhaus-sm">
+                      <p className="text-sm font-bold text-white">{chat.userPrompt}</p>
+                    </div>
+                    <div className="w-8 h-8 bg-bauhaus-yellow border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4" strokeWidth={3} />
+                    </div>
+                  </div>
+
+                  {/* AI Response */}
+                  <div className="flex gap-2">
+                    <div className="w-8 h-8 bg-bauhaus-red border-2 border-bauhaus flex items-center justify-center flex-shrink-0">
+                      <Brain className="w-4 h-4 text-white" strokeWidth={3} />
+                    </div>
+                    <div className="max-w-[80%] p-3 bg-white border-2 border-bauhaus shadow-bauhaus-sm">
+                      <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap">
+                        {chat.aiResponse}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
-
-            {chatHistory.map((chat) => (
-              <div key={chat.id} className="space-y-3 fade-in">
-                {/* User Message */}
-                <div className="flex gap-3 justify-end">
-                  <div className="flex-1 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl rounded-tr-sm p-3 max-w-[85%]">
-                    <p className="text-sm text-slate-800 dark:text-slate-200">{chat.userPrompt}</p>
-                  </div>
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-
-                {/* AI Response */}
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shadow-md">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-sm p-3 max-w-[85%]">
-                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{chat.aiResponse}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div ref={chatEndRef} />
           </>
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+      {/* Input Area - Bauhaus */}
+      <div className="p-4 border-t-4 border-bauhaus bg-white">
         {isLocked ? (
-          <div className="text-center text-sm text-slate-500 dark:text-slate-400 py-2">
-            Complete <span className="font-semibold text-indigo-600 dark:text-indigo-400">{wordsToUnlock}</span> more words to unlock AI
+          <div className="p-3 bg-gray-200 border-2 border-bauhaus text-center">
+            <p className="text-xs font-black uppercase">🔒 Write {wordsToUnlock} more words to unlock</p>
           </div>
         ) : (
-          <div className="flex gap-2">
-            <input
-              type="text"
+          <div className="space-y-2">
+            <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask MITRA AI for feedback..."
+              onKeyPress={handleKeyPress}
+              placeholder="Ask MITRA AI..."
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 text-sm border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
+              className="w-full p-3 border-2 border-bauhaus focus:outline-none focus:border-bauhaus-blue resize-none font-medium text-sm"
+              rows={3}
             />
             <button
               onClick={handleSend}
-              disabled={isLoading || !query.trim()}
-              className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg disabled:shadow-none"
+              disabled={!query.trim() || isLoading}
+              className="w-full bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-black uppercase tracking-wider py-3 hover:bg-bauhaus-red/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  THINKING...
+                </span>
               ) : (
-                <Send className="w-4 h-4" />
+                <span className="flex items-center justify-center gap-2">
+                  <Send className="w-4 h-4" strokeWidth={3} />
+                  SEND QUESTION
+                </span>
               )}
             </button>
+            <p className="text-xs font-bold text-center text-gray-600 uppercase">
+              Press Enter to send • Shift+Enter for new line
+            </p>
           </div>
         )}
       </div>

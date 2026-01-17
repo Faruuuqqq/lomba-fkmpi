@@ -117,14 +117,14 @@ export default function HomePage() {
               {/* Social Proof */}
               <div className="flex items-center gap-4 py-2">
                 <div className="flex -space-x-2">
-                  <div className="w-10 h-10 rounded-full bg-bauhaus-blue border-2 border-white flex items-center justify-center text-white font-bold text-sm">K</div>
-                  <div className="w-10 h-10 rounded-full bg-bauhaus-red border-2 border-white flex items-center justify-center text-white font-bold text-sm">F</div>
-                  <div className="w-10 h-10 rounded-full bg-bauhaus-yellow border-2 border-white flex items-center justify-center font-bold text-sm">M</div>
+                  <div className="w-10 h-10 rounded-full bg-bauhaus-blue border-2 border-white flex items-center justify-center text-white font-bold text-sm">F</div>
+                  <div className="w-10 h-10 rounded-full bg-bauhaus-red border-2 border-white flex items-center justify-center text-white font-bold text-sm">N</div>
+                  <div className="w-10 h-10 rounded-full bg-bauhaus-yellow border-2 border-white flex items-center justify-center font-bold text-sm">I</div>
                 </div>
                 <div className="text-sm">
                   <span className="font-bold">Built for FKMPI 2026</span>
                   <br />
-                  <span className="text-gray-600">Critical Thinking Competition</span>
+                  <span className="text-gray-600">Essai Competition</span>
                 </div>
               </div>
 
