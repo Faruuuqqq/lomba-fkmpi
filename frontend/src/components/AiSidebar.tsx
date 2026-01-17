@@ -6,6 +6,7 @@ import { AiInteraction } from '@/types';
 import { aiAPI } from '@/lib/api';
 import { Modal } from './Modal';
 import toast from 'react-hot-toast';
+import { useGamification } from '@/contexts/GamificationContext';
 
 interface AiSidebarProps {
   projectId: string;
@@ -95,6 +96,7 @@ export function AiSidebar({
   const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
   const [isGeneratingMap, setIsGeneratingMap] = useState(false);
 
+  const { stats, setShowDailyChallenge, addTokens } = useGamification();
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,11 +106,20 @@ export function AiSidebar({
   const handleSend = async () => {
     if (!query.trim() || isLocked) return;
 
+    // Check tokens (Cost: 5)
+    if (stats.tokens < 5) {
+      toast.error('Not enough tokens!');
+      setShowDailyChallenge(true);
+      return;
+    }
+
     const userQuery = query.trim();
     setQuery('');
     setIsLoading(true);
 
     try {
+      // Deduct optimistically
+      addTokens(-5);
       const { data } = await aiAPI.analyze(projectId, '', userQuery);
       const newInteraction: AiInteraction = {
         id: Date.now().toString(),
@@ -118,10 +129,10 @@ export function AiSidebar({
         projectId,
       };
       onNewChat(newInteraction);
-      toast.success('AI responded!', { duration: 2000 });
+      toast.success('Analysis complete', { duration: 2000 });
     } catch (error) {
       console.error('Error analyzing:', error);
-      toast.error('Failed to get AI response');
+      toast.error('Critical analysis unavailable. Ensure minimum 50 words written.');
       setQuery(userQuery);
     } finally {
       setIsLoading(false);
@@ -137,7 +148,7 @@ export function AiSidebar({
 
   const handleSearchCitations = async () => {
     if (!citationTopic.trim()) {
-      toast.error('Please enter a topic');
+      toast.error('Research topic required');
       return;
     }
 
@@ -145,10 +156,10 @@ export function AiSidebar({
     try {
       const { data } = await aiAPI.getCitations(citationTopic, currentContent);
       setCitations(data.citations || []);
-      toast.success(`Found ${data.citations?.length || 0} citations`);
+      toast.success(`Retrieved ${data.citations?.length || 0} academic sources`);
     } catch (error) {
       console.error('Citation search error:', error);
-      toast.error('Failed to fetch citations');
+      toast.error('Citation retrieval failed');
     } finally {
       setIsLoadingCitations(false);
     }
@@ -156,19 +167,27 @@ export function AiSidebar({
 
   const handleGrammarCheck = async () => {
     if (!currentContent || currentContent.length < 10) {
-      toast.error('Write some content first');
+      toast.error('Insufficient content for analysis');
+      return;
+    }
+
+    // Check tokens (Cost: 10)
+    if (stats.tokens < 10) {
+      toast.error('Not enough tokens! Need 10.');
+      setShowDailyChallenge(true);
       return;
     }
 
     setIsCheckingGrammar(true);
     try {
+      addTokens(-10);
       const { data } = await aiAPI.checkGrammar(projectId, currentContent);
       setGrammarResult(data);
       setShowGrammarModal(true);
-      toast.success('Grammar check complete!');
+      toast.success('Linguistic analysis complete');
     } catch (error) {
       console.error('Grammar check error:', error);
-      toast.error('Failed to check grammar');
+      toast.error('Grammar analysis failed');
     } finally {
       setIsCheckingGrammar(false);
     }
@@ -176,19 +195,27 @@ export function AiSidebar({
 
   const handlePlagiarismCheck = async () => {
     if (!currentContent || currentContent.length < 10) {
-      toast.error('Write some content first');
+      toast.error('Insufficient content for originality verification');
+      return;
+    }
+
+    // Check tokens (Cost: 10)
+    if (stats.tokens < 10) {
+      toast.error('Not enough tokens! Need 10.');
+      setShowDailyChallenge(true);
       return;
     }
 
     setIsCheckingPlagiarism(true);
     try {
+      addTokens(-10);
       const { data } = await aiAPI.checkPlagiarism(projectId, currentContent);
       setPlagiarismResult(data);
       setShowPlagiarismModal(true);
-      toast.success('Plagiarism check complete!');
+      toast.success('Originality assessment complete');
     } catch (error) {
       console.error('Plagiarism check error:', error);
-      toast.error('Failed to check plagiarism');
+      toast.error('Originality check failed');
     } finally {
       setIsCheckingPlagiarism(false);
     }
@@ -196,19 +223,27 @@ export function AiSidebar({
 
   const handleGenerateLogicMap = async () => {
     if (!currentContent || currentContent.length < 50) {
-      toast.error('Write at least 50 words first');
+      toast.error('Minimum 50 words required for structural analysis');
+      return;
+    }
+
+    // Check tokens (Cost: 15)
+    if (stats.tokens < 15) {
+      toast.error('Not enough tokens! Need 15.');
+      setShowDailyChallenge(true);
       return;
     }
 
     setIsGeneratingMap(true);
     try {
+      addTokens(-15);
       const { data } = await aiAPI.generateMap(projectId, currentContent);
       setLogicMapResult(data);
       setShowLogicMapModal(true);
-      toast.success('Logic map generated!');
+      toast.success('Argument structure mapped');
     } catch (error) {
       console.error('Logic map error:', error);
-      toast.error('Failed to generate logic map');
+      toast.error('Structural analysis failed');
     } finally {
       setIsGeneratingMap(false);
     }
@@ -309,11 +344,11 @@ export function AiSidebar({
                       <p className="text-sm font-bold mb-4">Ask me anything!</p>
 
                       <div className="space-y-2">
-                        <p className="text-xs font-black uppercase mb-2">Quick Prompts:</p>
+                        <p className="text-xs font-black uppercase mb-2">Suggested Inquiries:</p>
                         {[
-                          'Is my argument strong?',
-                          'Check for fallacies',
-                          'Suggest improvements'
+                          'Evaluate my argument structure',
+                          'Identify logical fallacies',
+                          'Strengthen my thesis'
                         ].map((prompt, idx) => (
                           <button
                             key={idx}
@@ -484,7 +519,7 @@ export function AiSidebar({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask MITRA AI..."
+                  placeholder="Pose your intellectual challenge..."
                   disabled={isLoading}
                   className="w-full p-3 border-2 border-bauhaus focus:outline-none focus:border-bauhaus-blue resize-none font-medium text-sm"
                   rows={3}
@@ -497,12 +532,12 @@ export function AiSidebar({
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      THINKING...
+                      DECONSTRUCTING ARGUMENTS...
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-2">
                       <Send className="w-4 h-4" strokeWidth={3} />
-                      SEND QUESTION
+                      CHALLENGE MY IDEA
                     </span>
                   )}
                 </button>

@@ -147,11 +147,11 @@ export default function ProjectPage() {
               size="sm"
             >
               <Save className="w-4 h-4 mr-1" />
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? 'Persisting...' : 'Commit'}
             </Button>
           </div>
 
-          <div className="flex-1 overflow-auto p-8">
+          <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto bg-white border-4 border-bauhaus shadow-bauhaus p-12">
               <Editor
                 content={content}
@@ -231,15 +231,16 @@ export default function ProjectPage() {
               size="sm"
             >
               <Save className="w-4 h-4 mr-1" />
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? 'Persisting...' : 'Commit'}
             </Button>
           </div>
         </div>
 
         {/* Editor Area - Paper-like with Serif Font */}
-        <div className="flex-1 overflow-auto p-8">
-          <div className="max-w-3xl mx-auto bg-white border-4 border-bauhaus shadow-bauhaus p-8 md:p-12">
-            <style jsx global>{`
+        <div className="flex-1 overflow-y-auto pb-96">
+          <div className="p-8">
+            <div className="max-w-[65ch] mx-auto bg-white border-4 border-bauhaus shadow-bauhaus p-12 md:p-16 min-h-[800px]">
+              <style jsx global>{`
               .ProseMirror {
                 font-family: 'Merriweather', 'Georgia', serif;
                 font-size: 16px;
@@ -267,11 +268,12 @@ export default function ProjectPage() {
                 margin-bottom: 1em;
               }
             `}</style>
-            <Editor
-              content={content}
-              onUpdate={setContent}
-              isLocked={!isAiUnlocked}
-            />
+              <Editor
+                content={content}
+                onUpdate={setContent}
+                isLocked={!isAiUnlocked}
+              />
+            </div>
           </div>
         </div>
       </main>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, FileText, User, Settings, LogOut } from 'lucide-react';
+import { Plus, Search, FileText, User, Settings, LogOut, Home } from 'lucide-react';
 import { projectsAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -146,11 +146,11 @@ export function ProjectSidebar() {
                 </div>
                 <div className="flex gap-2">
                     <button
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push('/projects')}
                         className="flex-1 p-2 border-2 border-bauhaus hover:bg-bauhaus-blue hover:text-white transition-colors"
-                        title="Dashboard"
+                        title="Home"
                     >
-                        <Settings className="w-4 h-4 mx-auto" strokeWidth={2.5} />
+                        <Home className="w-4 h-4 mx-auto" strokeWidth={2.5} />
                     </button>
                     <button
                         onClick={() => router.push('/login')}

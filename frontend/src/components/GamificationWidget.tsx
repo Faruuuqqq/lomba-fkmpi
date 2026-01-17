@@ -1,44 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Coins, Flame, Target } from 'lucide-react';
-import { gamificationAPI } from '@/lib/api';
-
-interface GamificationStats {
-    tokens: number;
-    streak: number;
-    dailyChallenge?: {
-        id: number;
-        question: string;
-        completed: boolean;
-    };
-}
+import { useState } from 'react';
+import { Coins, Flame, Target, Check, RefreshCw } from 'lucide-react';
+import { useGamification } from '@/contexts/GamificationContext';
+import { Modal } from './Modal';
+import toast from 'react-hot-toast';
 
 export function GamificationWidget() {
-    const [stats, setStats] = useState<GamificationStats>({ tokens: 0, streak: 0 });
+    const { stats, isLoading, showDailyChallenge, setShowDailyChallenge, addTokens } = useGamification();
     const [isExpanded, setIsExpanded] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [answer, setAnswer] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        loadStats();
-    }, []);
-
-    const loadStats = async () => {
-        try {
-            const { data } = await gamificationAPI.getStats();
-            setStats({
-                tokens: data.tokens || 0,
-                streak: data.streak || 0,
-                dailyChallenge: data.dailyChallenge,
-            });
-        } catch (error) {
-            console.error('Failed to load gamification stats:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    if (isLoading) {
+    if (isLoading && !stats.tokens) { // Show if we have stale data at least
         return (
             <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-bauhaus-blue border-t-transparent rounded-full animate-spin"></div>
@@ -124,6 +98,70 @@ export function GamificationWidget() {
                     </div>
                 </>
             )}
+            {/* Daily Challenge Modal */}
+            <Modal
+                isOpen={showDailyChallenge}
+                onClose={() => setShowDailyChallenge(false)}
+                title="🧠 Brain Fuel Depleted!"
+            >
+                <div className="space-y-6">
+                    <div className="text-center p-6 bg-gray-100 border-2 border-bauhaus">
+                        <Coins className="w-16 h-16 mx-auto mb-3 text-bauhaus-yellow" />
+                        <h3 className="font-black uppercase text-xl mb-2">Oops, Token Habis!</h3>
+                        <p className="text-sm font-medium text-gray-600">
+                            Fasilitas AI butuh "bensin". Jawab kuis logika ini untuk dapat 50 Token instan!
+                        </p>
+                    </div>
+
+                    <div className="bg-bauhaus-blue p-6 border-2 border-bauhaus text-white">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Target className="w-6 h-6" />
+                            <h4 className="font-black uppercase">Daily Logic Challenge</h4>
+                        </div>
+
+                        <p className="font-bold text-lg mb-4">
+                            {stats.dailyChallenge?.question || "All dogs are animals. Some animals are pets. Therefore, some dogs are pets. Vaid or Invalid?"}
+                        </p>
+
+                        <div className="space-y-3">
+                            <input
+                                type="text"
+                                placeholder="Type your answer..."
+                                autoFocus
+                                value={answer}
+                                onChange={(e) => setAnswer(e.target.value)}
+                                className="w-full p-3 text-black border-2 border-bauhaus font-medium focus:outline-none focus:border-bauhaus-yellow"
+                            />
+                            <button
+                                onClick={() => {
+                                    setIsSubmitting(true);
+                                    setTimeout(() => {
+                                        addTokens(50);
+                                        setShowDailyChallenge(false);
+                                        setAnswer('');
+                                        setIsSubmitting(false);
+                                        toast.success('🎉 +50 Tokens! Brain refueled.');
+                                    }, 1000);
+                                }}
+                                disabled={!answer || isSubmitting}
+                                className="w-full bg-bauhaus-yellow text-black border-2 border-bauhaus font-black uppercase py-3 hover:bg-bauhaus-yellow/90 disabled:opacity-50 transition-all shadow-bauhaus-sm btn-press"
+                            >
+                                {isSubmitting ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        Validating...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Check className="w-4 h-4" strokeWidth={3} />
+                                        Submit Answer (+50 Tokens)
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
