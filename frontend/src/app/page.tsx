@@ -98,14 +98,14 @@ export default function HomePage() {
               </div>
 
               <h1 className="text-bauhaus-display">
-                THINK<br />
-                CRITICALLY<br />
-                <span className="text-bauhaus-red">WRITE BETTER</span>
+                CONSTRUCT LOGIC<br />
+                DECONSTRUCT BIAS<br />
+                <span className="text-bauhaus-red">MASTER YOUR THESIS</span>
               </h1>
 
               <p className="text-lg sm:text-xl font-medium leading-relaxed max-w-xl">
-                MITRA AI helps you develop stronger arguments, identify logical fallacies,
-                and write academic papers that demonstrate genuine critical thinking.
+                Stop letting AI do the thinking. MITRA AI forces you to build strong arguments first,
+                then helps you polish them. The only writing assistant that respects your intellect.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -113,7 +113,7 @@ export default function HomePage() {
                   onClick={() => router.push('/register')}
                   className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus-lg btn-press font-black uppercase tracking-wider text-lg px-8 py-6 h-auto rounded-none hover:bg-bauhaus-red/90"
                 >
-                  START WRITING FREE
+                  CHALLENGE YOUR IDEAS
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button
@@ -185,43 +185,43 @@ export default function HomePage() {
             {[
               {
                 icon: Brain,
-                title: 'CRITICAL THINKING FIRST',
-                description: 'AI assistance unlocks only after you\'ve written your own thoughts. No shortcuts, just genuine learning.',
+                title: 'EARN YOUR AI',
+                description: 'No lazy prompting. The AI generation unlocks only after you demonstrate original thought. We build discipline, not dependency.',
                 color: 'bauhaus-red',
                 shape: 'circle'
               },
               {
                 icon: Target,
-                title: 'LOGIC MAPPING',
-                description: 'Visualize your arguments with interactive reasoning graphs. See connections and strengthen your logic.',
+                title: 'ARGUMENT MAPPING',
+                description: 'Visualize the anatomy of your thesis. See exactly where your premises support your conclusion—and where they collapse.',
                 color: 'bauhaus-blue',
                 shape: 'square'
               },
               {
                 icon: Shield,
-                title: 'BIAS DETECTION',
-                description: 'Identify logical fallacies and cognitive biases in your writing. Build stronger, more objective arguments.',
+                title: 'FALLACY DETECTOR',
+                description: 'Your personal "Devil\'s Advocate". We flag Strawmans, Ad Hominems, and emotional bias before your professor does.',
                 color: 'bauhaus-yellow',
                 shape: 'triangle'
               },
               {
                 icon: Zap,
-                title: 'REAL-TIME FEEDBACK',
-                description: 'Get instant suggestions on argument structure, evidence quality, and logical consistency as you write.',
+                title: 'SOCRATIC FEEDBACK',
+                description: 'Instead of fixing your answers, we ask the right questions. Refine your logic through a guided dialectic process.',
                 color: 'bauhaus-red',
                 shape: 'square'
               },
               {
                 icon: Check,
-                title: 'ACADEMIC FOCUS',
-                description: 'Distraction-free editor designed specifically for academic writing and critical thinking.',
+                title: 'THE DISTRACTION-FREE LAB',
+                description: 'A minimalist workspace designed for deep work. No clutter, just you and your argument.',
                 color: 'bauhaus-blue',
                 shape: 'circle'
               },
               {
                 icon: Brain,
-                title: 'PROGRESS TRACKING',
-                description: 'Monitor your writing habits and logic score over time. See your critical thinking skills improve.',
+                title: 'COGNITIVE METRICS',
+                description: 'Track your "Logic Score" and writing consistency. Gamify your intellectual growth.',
                 color: 'bauhaus-yellow',
                 shape: 'square'
               }
@@ -269,17 +269,17 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-bauhaus-display mb-6">
-              READY TO WRITE<br />
-              <span className="text-bauhaus-red">BETTER PAPERS?</span>
+              DON'T JUST WRITE.<br />
+              <span className="text-bauhaus-red">REASON.</span>
             </h2>
             <p className="text-xl font-bold mb-8 uppercase tracking-wide">
-              Join thousands of students improving their critical thinking
+              Join the new wave of scholars utilizing AI responsibly.
             </p>
             <Button
               onClick={() => router.push('/register')}
               className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus-lg btn-press font-black uppercase tracking-wider text-xl px-12 py-8 h-auto rounded-none hover:bg-bauhaus-red/90"
             >
-              GET STARTED FOR FREE
+              CHALLENGE YOUR IDEAS
               <ArrowRight className="w-6 h-6 ml-3" />
             </Button>
           </div>

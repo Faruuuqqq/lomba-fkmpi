@@ -81,8 +81,8 @@ export default function LoginPage() {
                   <Circle className="w-4 h-4 text-bauhaus-blue" fill="currentColor" />
                 </div>
                 <div>
-                  <h3 className="font-bold uppercase tracking-wide mb-1">CRITICAL THINKING</h3>
-                  <p className="font-medium opacity-90">AI unlocks after 150 words of original thought</p>
+                  <h3 className="font-bold uppercase tracking-wide mb-1">PROVE YOUR POINT</h3>
+                  <p className="font-medium opacity-90">Write 150 words of raw ideas. Let AI polish the diamond.</p>
                 </div>
               </div>
 
@@ -91,8 +91,8 @@ export default function LoginPage() {
                   <Square className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold uppercase tracking-wide mb-1">LOGIC MAPPING</h3>
-                  <p className="font-medium opacity-90">Visualize your arguments in real-time</p>
+                  <h3 className="font-bold uppercase tracking-wide mb-1">SEE THE STRUCTURE</h3>
+                  <p className="font-medium opacity-90">Turn complex paragraphs into clear, visual logic nodes.</p>
                 </div>
               </div>
 
@@ -101,8 +101,8 @@ export default function LoginPage() {
                   <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-bauhaus-blue"></div>
                 </div>
                 <div>
-                  <h3 className="font-bold uppercase tracking-wide mb-1">BIAS DETECTION</h3>
-                  <p className="font-medium opacity-90">Identify fallacies and strengthen arguments</p>
+                  <h3 className="font-bold uppercase tracking-wide mb-1">DEFEND YOUR THESIS</h3>
+                  <p className="font-medium opacity-90">Identify weak spots before your defense day.</p>
                 </div>
               </div>
             </div>
@@ -125,10 +125,10 @@ export default function LoginPage() {
 
             <div className="mb-8">
               <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-2">
-                SIGN IN
+                ENTER THE LAB
               </h2>
               <p className="font-medium text-lg">
-                Welcome back! Continue your writing journey.
+                Resume your intellectual pursuit.
               </p>
             </div>
 

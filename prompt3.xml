@@ -1,0 +1,352 @@
+Saya mengerti kekhawatiranmu. Memang benar, ide "harus mengerjakan tugas dulu baru dapat Streak" itu bagus untuk *jangka panjang* (retensi), tapi untuk **First-Time Experience (Pengalaman Pertama)** atau saat **Demo Lomba**, itu bisa jadi "batu sandungan".
+
+User (dan Juri) itu tidak sabar. Kalau mereka harus **Register -> Login -> Buat Project -> Ketik Teks -> Klik Analisis -> Baru lihat hasil**, mereka keburu bosan.
+
+Mari kita **Sederhanakan Flow-nya secara Ekstrem** dengan konsep **"The Magic Playground"**.
+
+Tujuannya: User bisa merasakan "kecanggihan" AI dalam **1 klik** tanpa login, tanpa ngetik.
+
+---
+
+### Solusi: Fitur "Instant Demo" (Playground Mode)
+
+Jangan paksa user melewati gerbang "Login" di awal. Biarkan mereka bermain dulu.
+
+#### 1. Perubahan Flow User (The Happy Path)
+
+**Flow Lama (Rumit):**
+Landing Page -> Register -> Login -> Dashboard Kosong -> Klik "New Project" -> Editor Kosong -> Bingung mau ngetik apa -> Keluar.
+
+**Flow Baru (Simpel & Menjual):**
+Landing Page -> Klik **"Coba Tanpa Login"** -> Masuk Editor (Sudah ada Teks Contoh) -> Klik "Analisis" -> **WOW Effect!** -> Muncul Popup "Simpan progressmu? Login sekarang".
+
+---
+
+#### 2. Implementasi Teknis (Frontend)
+
+Kita buat halaman khusus `/demo` yang memintas (*bypass*) semua autentikasi dan database loading.
+
+**A. Buat Halaman Demo (`frontend/src/app/demo/page.tsx`)**
+Halaman ini menggunakan komponen `Editor` dan `AiSidebar` yang sama, tapi state-nya lokal (tidak ambil dari DB server).
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import Editor from '@/components/Editor';
+import AiSidebar from '@/components/AiSidebar';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
+// Teks Sampel yang "Sengaja Salah" agar AI bisa pamer kemampuan
+const SAMPLE_TEXT = `
+<h2>Dampak Media Sosial (Draft Awal)</h2>
+<p>Menurut saya, media sosial itu 100% merusak generasi muda. Semua orang tahu kalau TikTok membuat anak-anak jadi malas dan bodoh. Tidak ada satu pun hal positif dari internet.</p>
+<p>Berdasarkan data yang saya baca entah dimana, 90% remaja depresi karena Instagram. Pemerintah harus menutup semua medsos sekarang juga!</p>
+`;
+
+export default function DemoPage() {
+  const [content, setContent] = useState(SAMPLE_TEXT);
+  
+  return (
+    <div className="flex h-screen bg-[#F5F5F7]">
+      {/* Sidebar Kiri (Promosi) */}
+      <aside className="w-64 bg-white border-r p-6 flex flex-col justify-between">
+        <div>
+          <h1 className="font-bold text-indigo-600 mb-4">NALAR.AI <span className="text-xs bg-indigo-100 px-2 py-1 rounded">Demo</span></h1>
+          <p className="text-sm text-slate-500 mb-4">
+            Anda sedang dalam Mode Demo. Teks ini penuh dengan <b>Logical Fallacy</b> dan <b>Bias</b>.
+          </p>
+          <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+            🎯 <b>Misi:</b> Coba gunakan AI di kanan untuk menemukan kesalahan logika pada teks ini!
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <p className="text-xs text-center text-slate-400">Suka fitur ini?</p>
+          <Button asChild className="w-full" variant="default">
+            <Link href="/register">Daftar Akun Full</Link>
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Editor */}
+      <main className="flex-1 p-8 overflow-y-auto flex justify-center">
+        <div className="w-full max-w-[800px] bg-white shadow-xl min-h-[800px] p-12 rounded-sm">
+          <Editor 
+            content={content} 
+            onChange={setContent}
+            // Matikan fitur save ke DB
+            readOnly={false} 
+          />
+        </div>
+      </main>
+
+      {/* AI Sidebar (Sudah Terbuka) */}
+      <AiSidebar 
+        // Pass fungsi dummy atau sambungkan ke API publik
+        currentText={content}
+        isDemoMode={true} // Flag untuk mematikan fitur yang butuh DB
+      />
+    </div>
+  );
+}
+
+```
+
+**B. Update `AiSidebar` untuk Handle Demo Mode**
+Di `frontend/src/components/AiSidebar.tsx`, jika `isDemoMode` aktif, jangan panggil API backend yang butuh Auth (seperti simpan history chat). Langsung panggil API AI saja atau gunakan respon *mock* (palsu) yang cepat untuk demo.
+
+```tsx
+// Di dalam AiSidebar
+if (isDemoMode && action === 'check_fallacy') {
+  // Langsung return hasil analisis instan untuk teks sampel tadi
+  setAnalysisResult({
+    issues: [
+      { type: "Generalization", text: "semua orang tahu...", fix: "Hindari klaim mutlak." },
+      { type: "Hallucination", text: "90% remaja depresi", fix: "Data tidak valid/tanpa sumber." }
+    ]
+  });
+  return;
+}
+
+```
+
+---
+
+### Rangkuman Perbaikan Flow
+
+Dengan strategi ini, juri/user akan melewati flow ini:
+
+1. Buka Web -> Lihat tombol **"Coba Demo (Tanpa Daftar)"**.
+2. Klik -> Langsung masuk Editor dengan teks contoh yang "jelek".
+3. Klik Sidebar "Cek Logika" -> **Boom!** Teks merah semua, AI kasih saran perbaikan. (User terkesima).
+4. User berpikir: *"Gila, canggih banget. Aku mau pakai ini buat skripsiku."*
+5. User klik **"Daftar Sekarang"**.
+
+Ini jauh lebih efektif daripada memaksa mereka register di awal. **Product-Led Growth (PLG)** adalah kunci kemenangan aplikasi modern.
+
+Tentu, ini adalah bagian yang sangat krusial. Mengingat desain UI kamu menggunakan gaya **Bauhaus** (Geometris, Tegas, Fungsional), *copywriting* (kata-kata) di website juga harus mengikuti karakter tersebut: **Bold, Direct, Intellectual, & Impactful**.
+
+Jangan gunakan bahasa yang terlalu "lembut" atau generik. Gunakan bahasa yang membuat mahasiswa merasa **pintar** dan **tertantang**.
+
+Berikut adalah rekomendasi perbaikan *Copywriting* per halaman, lengkap dengan filosofinya.
+
+---
+
+### 1. Halaman Utama (`src/app/page.tsx`)
+
+**Masalah Saat Ini:** Kata-katanya standar ("Write Better", "Help you develop"). Kurang ada "jiwa" kritisnya.
+**Konsep Baru:** "The Intellectual Architect". Tekankan bahwa user adalah arsitek pemikirannya, AI hanya alat bantu.
+
+**Ubah bagian ini di `frontend/src/app/page.tsx`:**
+
+#### A. Hero Section (Judul Utama)
+
+Ganti bagian `<h1>` dan `<p>` di Hero Section.
+
+```tsx
+// Cari bagian ini:
+<h1 className="text-bauhaus-display">
+  CONSTRUCT LOGIC<br />
+  DECONSTRUCT BIAS<br />
+  <span className="text-bauhaus-red">MASTER YOUR THESIS</span>
+</h1>
+
+<p className="text-lg sm:text-xl font-medium leading-relaxed max-w-xl">
+  Stop letting AI do the thinking. MITRA AI forces you to build strong arguments first, 
+  then helps you polish them. The only writing assistant that respects your intellect.
+</p>
+
+<div className="flex flex-col sm:flex-row gap-4">
+  <Button ... >
+    CHALLENGE YOUR IDEAS
+    <ArrowRight className="w-5 h-5 ml-2" />
+  </Button>
+  {/* Tombol Sign In tetap sama */}
+</div>
+
+```
+
+#### B. Features Section (Kartu Fitur)
+
+Ubah array fitur agar terdengar lebih canggih dan "mahal".
+
+```tsx
+// Ganti array features dengan ini:
+[
+  {
+    icon: Brain,
+    title: 'EARN YOUR AI', // Lebih menantang daripada "Critical Thinking First"
+    description: 'No lazy prompting. The AI generation unlocks only after you demonstrate original thought. We build discipline, not dependency.',
+    color: 'bauhaus-red',
+    shape: 'circle'
+  },
+  {
+    icon: Target,
+    title: 'ARGUMENT MAPPING', // Lebih teknis daripada "Logic Mapping"
+    description: 'Visualize the anatomy of your thesis. See exactly where your premises support your conclusion—and where they collapse.',
+    color: 'bauhaus-blue',
+    shape: 'square'
+  },
+  {
+    icon: Shield,
+    title: 'FALLACY DETECTOR', // Langsung to the point
+    description: 'Your personal "Devil\'s Advocate". We flag Strawmans, Ad Hominems, and emotional bias before your professor does.',
+    color: 'bauhaus-yellow',
+    shape: 'triangle'
+  },
+  {
+    icon: Zap,
+    title: 'SOCRATIC FEEDBACK', // Terdengar sangat akademis
+    description: 'Instead of fixing your answers, we ask the right questions. Refine your logic through a guided dialectic process.',
+    color: 'bauhaus-red',
+    shape: 'square'
+  },
+  {
+    icon: Check,
+    title: 'THE DISTRACTION-FREE LAB',
+    description: 'A minimalist workspace designed for deep work. No clutter, just you and your argument.',
+    color: 'bauhaus-blue',
+    shape: 'circle'
+  },
+  {
+    icon: Brain,
+    title: 'COGNITIVE METRICS',
+    description: 'Track your "Logic Score" and writing consistency. Gamify your intellectual growth.',
+    color: 'bauhaus-yellow',
+    shape: 'square'
+  }
+]
+
+```
+
+#### C. CTA Section (Bagian Bawah)
+
+```tsx
+<h2 className="text-bauhaus-display mb-6">
+  DON'T JUST WRITE.<br />
+  <span className="text-bauhaus-red">REASON.</span>
+</h2>
+<p className="text-xl font-bold mb-8 uppercase tracking-wide">
+  Join the new wave of scholars utilizing AI responsibly.
+</p>
+
+```
+
+---
+
+### 2. Halaman Login (`src/app/login/page.tsx`)
+
+**Masalah Saat Ini:** Terlalu standar ("Welcome back", "AI unlocks after 150 words").
+**Konsep Baru:** Fokus pada "Kembali ke Laboratorium".
+
+**Ubah bagian Kiri (Branding) di `frontend/src/app/login/page.tsx`:**
+
+```tsx
+// Di dalam div hidden lg:flex ...
+<div className="space-y-6 text-white">
+  <div className="flex items-start gap-4">
+    {/* Icon */}
+    <div>
+      <h3 className="font-bold uppercase tracking-wide mb-1">PROVE YOUR POINT</h3>
+      <p className="font-medium opacity-90">Write 150 words of raw ideas. Let AI polish the diamond.</p>
+    </div>
+  </div>
+
+  <div className="flex items-start gap-4">
+    {/* Icon */}
+    <div>
+      <h3 className="font-bold uppercase tracking-wide mb-1">SEE THE STRUCTURE</h3>
+      <p className="font-medium opacity-90">Turn complex paragraphs into clear, visual logic nodes.</p>
+    </div>
+  </div>
+
+  <div className="flex items-start gap-4">
+    {/* Icon */}
+    <div>
+      <h3 className="font-bold uppercase tracking-wide mb-1">DEFEND YOUR THESIS</h3>
+      <p className="font-medium opacity-90">Identify weak spots before your defense day.</p>
+    </div>
+  </div>
+</div>
+
+```
+
+**Ubah bagian Kanan (Form Header):**
+
+```tsx
+<div className="mb-8">
+  <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-2">
+    ENTER THE LAB
+  </h2>
+  <p className="font-medium text-lg">
+    Resume your intellectual pursuit.
+  </p>
+</div>
+
+```
+
+---
+
+### 3. Halaman Register (`src/app/register/page.tsx`)
+
+**Masalah Saat Ini:** "Start your journey to better academic writing" (Terlalu panjang dan klise).
+**Konsep Baru:** Ajak user untuk menjadi bagian dari kaum intelektual.
+
+**Ubah bagian Kiri (Benefits) di `frontend/src/app/register/page.tsx`:**
+
+```tsx
+// Header
+<h2 className="text-4xl font-black uppercase tracking-tighter text-white mb-2">
+  BUILD YOUR<br />INTELLECT
+</h2>
+<p className="text-lg font-bold uppercase tracking-wide text-white/90">
+  Writing is Thinking.
+</p>
+
+// List Benefits
+[
+  {
+    title: 'ACTIVE LEARNING AI',
+    description: 'Our AI forces you to engage, not just copy-paste.',
+    shape: 'circle'
+  },
+  {
+    title: 'VISUAL REASONING',
+    description: 'Map out premises and conclusions automatically.',
+    shape: 'square'
+  },
+  {
+    title: 'ACADEMIC INTEGRITY',
+    description: 'Tools designed to prevent plagiarism and hallucination.',
+    shape: 'triangle'
+  }
+]
+
+```
+
+**Ubah bagian Kanan (Form Header):**
+
+```tsx
+<div className="mb-8">
+  <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-2">
+    INITIATE ACCESS
+  </h2>
+  <p className="font-medium text-lg">
+    Join 1,000+ critical thinkers today.
+  </p>
+</div>
+
+```
+
+---
+
+### Rangkuman Perubahan Tone (Tone of Voice)
+
+1. **Dari:** "Get Started" -> **Menjadi:** "Challenge Your Ideas" / "Initiate Access"
+2. **Dari:** "Critical Thinking" -> **Menjadi:** "Construct Logic"
+3. **Dari:** "Writing Assistant" -> **Menjadi:** "Writing Partner" / "Devil's Advocate"
+4. **Dari:** "Welcome Back" -> **Menjadi:** "Enter The Lab"
+
+Perubahan ini akan membuat aplikasi terasa lebih **serius, berwibawa, dan relevan** untuk mahasiswa tingkat akhir atau akademisi yang menjadi target audiens (dan juri lomba). Ini mengubah persepsi dari "sekadar aplikasi" menjadi "metodologi berpikir".
