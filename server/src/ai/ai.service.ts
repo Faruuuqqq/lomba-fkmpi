@@ -41,29 +41,45 @@ Rules:
 
     const userPrompt = `Current essay content:\n\n${dto.currentText}\n\nStudent's question: ${dto.userQuery}`;
 
-    const zAiResponse = await firstValueFrom(
-      this.httpService.post(
-        'https://api.z.ai/api/paas/v4/chat/completions',
-        {
-          model: 'glm-4.7',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 150,
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Accept-Language': 'en-US,en',
+    let aiResponse = 'AI service temporarily unavailable. Please try again later.';
+    
+    try {
+      const zAiResponse = await firstValueFrom(
+        this.httpService.post(
+          'https://api.z.ai/api/paas/v4/chat/completions',
+          {
+            model: 'glm-4.7',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            max_tokens: 150,
+            temperature: 0.7,
           },
-        }
-      )
-    );
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
+              'Content-Type': 'application/json',
+              'Accept-Language': 'en-US,en',
+            },
+            timeout: 30000, // 30 second timeout
+          }
+        )
+      );
 
-    const aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
+      aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || 'No response generated.';
+    } catch (error) {
+      console.error('AI Service Error:', error);
+      
+      // Handle specific API errors
+      if (error?.response?.data?.error?.code === '1113') {
+        aiResponse = 'AI service temporarily unavailable due to insufficient balance. Please contact administrator.';
+      } else if (error?.code === 'ECONNABORTED' || error?.code === 'ERR_CANCELED') {
+        aiResponse = 'AI service request timed out. Please try again.';
+      } else {
+        aiResponse = 'AI service is currently experiencing issues. Please try again later.';
+      }
+    }
 
     await this.prisma.aiInteraction.create({
       data: {
