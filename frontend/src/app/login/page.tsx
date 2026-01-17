@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/projects');
     }
   }, [isAuthenticated, router]);
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      router.push('/projects');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Invalid email or password');
     } finally {

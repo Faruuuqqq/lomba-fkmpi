@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Editor } from '@/components/Editor';
 import { AiSidebar } from '@/components/AiSidebar';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
+import { GamificationWidget } from '@/components/GamificationWidget';
 import { projectsAPI, aiAPI } from '@/lib/api';
 import { Project, AiInteraction } from '@/types';
 import { Save, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
@@ -214,6 +215,7 @@ export default function ProjectPage() {
             <span className="text-xs font-bold uppercase text-gray-600">
               {wordCount} words
             </span>
+            <GamificationWidget />
             <Button
               onClick={() => setIsZenMode(true)}
               className="border-2 border-bauhaus rounded-none hover:bg-bauhaus-blue hover:text-white transition-colors btn-press bg-white"
@@ -292,6 +294,7 @@ export default function ProjectPage() {
             wordsToUnlock={wordsToUnlock}
             chatHistory={chatHistory}
             onNewChat={handleNewChat}
+            currentContent={content}
           />
         </div>
       )}

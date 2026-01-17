@@ -53,6 +53,12 @@ export const aiAPI = {
     api.post('/ai/generate-map', { projectId, text }),
   ethicsCheck: (projectId: string, text: string) =>
     api.post('/ai/ethics-check', { projectId, text }),
+  getCitations: (topic: string, content: string) =>
+    api.post('/ai/citations', { topic, content }),
+  checkGrammar: (projectId: string, text: string) =>
+    api.post('/ai/grammar-check', { projectId, text }),
+  checkPlagiarism: (projectId: string, text: string) =>
+    api.post('/ai/plagiarism-check', { projectId, text }),
 };
 
 export const analyticsAPI = {
