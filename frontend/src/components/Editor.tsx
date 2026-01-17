@@ -2,11 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Bold from '@tiptap/extension-bold';
-import Italic from '@tiptap/extension-italic';
 import Underline from '@tiptap/extension-underline';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
 import { useEffect } from 'react';
 import { Bold as BoldIcon, Italic as ItalicIcon, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo, Heading1, Heading2, Type } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -20,12 +16,7 @@ interface EditorProps {
 export function Editor({ content, onUpdate, isLocked }: EditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        bold: Bold,
-        italic: Italic,
-        bulletList: BulletList,
-        orderedList: OrderedList,
-      }),
+      StarterKit,
       Underline,
     ],
     content,
