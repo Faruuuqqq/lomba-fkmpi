@@ -20,12 +20,13 @@ interface EditorProps {
 export function Editor({ content, onUpdate, isLocked }: EditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Bold,
-      Italic,
+      StarterKit.configure({
+        bold: Bold,
+        italic: Italic,
+        bulletList: BulletList,
+        orderedList: OrderedList,
+      }),
       Underline,
-      BulletList,
-      OrderedList,
     ],
     content,
     onUpdate: ({ editor }) => {

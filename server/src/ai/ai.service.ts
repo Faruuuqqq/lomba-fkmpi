@@ -43,8 +43,11 @@ Rules:
 
     let aiResponse = 'AI service temporarily unavailable. Please try again later.';
     
-    // Use Gemini if available, otherwise try ZAI
-    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your-gemini-api-key-here') {
+    // Use Gemini if available, otherwise try ZAI with better error handling
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const zaiKey = process.env.ZAI_API_KEY;
+    
+    if (geminiKey && geminiKey !== 'your-gemini-api-key-here') {
       try {
         const geminiResponse = await firstValueFrom(
           this.httpService.post(
