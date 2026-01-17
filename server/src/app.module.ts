@@ -7,6 +7,7 @@ import { AiModule } from './ai/ai.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MediaModule } from './media/media.module';
 import { AdminModule } from './admin/admin.module';
+import { GamificationModule } from './gamification/gamification.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AdminModule } from './admin/admin.module';
     AnalyticsModule,
     MediaModule,
     AdminModule,
+    GamificationModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

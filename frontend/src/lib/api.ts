@@ -63,4 +63,13 @@ export const analyticsAPI = {
   getPerformance: (feature?: string) => api.get(`/analytics/performance${feature ? `?feature=${feature}` : ''}`),
 };
 
+// Gamification API
+export const gamificationAPI = {
+  getStats: () => api.get('/gamification/stats'),
+  getDailyChallenge: () => api.get('/gamification/challenge'),
+  submitChallenge: (challengeId: number, answerIndex: number) =>
+    api.post('/gamification/challenge/submit', { challengeId, answerIndex }),
+  checkBalance: (cost: number) => api.post('/gamification/check-balance', { cost }),
+};
+
 export default api;

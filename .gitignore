@@ -9,3 +9,9 @@ coverage/
 *.sqlite
 *.db
 /docs
+
+# Private documentation and prompts
+*.xml
+*.md
+*.txt
+prompt*.xml

@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { projectsAPI } from '@/lib/api';
+import { projectsAPI, gamificationAPI } from '@/lib/api';
 import { Project } from '@/types';
-import { Plus, FileText, LogOut, Trash2, Search, Circle, Square } from 'lucide-react';
-
+import { Plus, FileText, LogOut, Trash2, Search, Circle, Square, Flame, Coins } from 'lucide-react';
+import { DailyChallengeModal } from '@/components/DailyChallengeModal';
 import { useDebounce } from '@/hooks/useDebounce';
 
 export default function DashboardPage() {
@@ -23,6 +23,11 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'DRAFT' | 'FINAL'>('all');
 
+  // Gamification state
+  const [tokens, setTokens] = useState(5);
+  const [streak, setStreak] = useState(0);
+  const [showChallenge, setShowChallenge] = useState(false);
+  const [challengeAvailable, setChallengeAvailable] = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -32,6 +37,7 @@ export default function DashboardPage() {
       return;
     }
     fetchProjects();
+    fetchGamificationStats();
   }, [user, router]);
 
   const fetchProjects = async () => {
@@ -46,6 +52,28 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchGamificationStats = async () => {
+    try {
+      const { data } = await gamificationAPI.getStats();
+      setTokens(data.tokens);
+      setStreak(data.currentStreak);
+      setChallengeAvailable(data.nextChallengeAvailable);
+
+      // Auto-show Daily Challenge if available
+      if (data.nextChallengeAvailable) {
+        setTimeout(() => setShowChallenge(true), 500);
+      }
+    } catch (error) {
+      console.error('Error fetching gamification stats:', error);
+    }
+  };
+
+  const handleChallengeComplete = (tokensEarned: number, newStreak: number) => {
+    setTokens(prev => prev + tokensEarned);
+    setStreak(newStreak);
+    setChallengeAvailable(false);
   };
 
   const handleCreateProject = async () => {
@@ -124,6 +152,29 @@ export default function DashboardPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
+              {/* Token & Streak Display */}
+              <div className="hidden sm:flex items-center gap-4 mr-4">
+                {streak > 0 && (
+                  <div className="flex items-center gap-1 px-3 py-1 bg-bauhaus-red border-2 border-bauhaus">
+                    <Flame className="w-4 h-4 text-white" />
+                    <span className="font-bold text-white text-sm">{streak}🔥</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 px-3 py-1 bg-bauhaus-yellow border-2 border-bauhaus">
+                  <Coins className="w-4 h-4" />
+                  <span className="font-bold text-sm">{tokens}</span>
+                </div>
+                {challengeAvailable && (
+                  <Button
+                    onClick={() => setShowChallenge(true)}
+                    className="bg-white border-2 border-bauhaus rounded-none font-bold uppercase tracking-wide text-xs px-2 py-1 h-auto btn-press animate-pulse"
+                    size="sm"
+                  >
+                    DAILY QUIZ!
+                  </Button>
+                )}
+              </div>
+
               <Button
                 onClick={logout}
                 className="bg-bauhaus-red text-white border-4 border-bauhaus shadow-bauhaus btn-press font-bold uppercase tracking-wide rounded-none hover:bg-bauhaus-red/90"
@@ -329,6 +380,13 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Daily Challenge Modal */}
+      <DailyChallengeModal
+        isOpen={showChallenge}
+        onClose={() => setShowChallenge(false)}
+        onComplete={handleChallengeComplete}
+      />
     </div>
   );
 }

@@ -9,16 +9,21 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  name      String?
-  role      String    @default("USER")
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  projects  Project[]
-  mediaFiles MediaFile[]
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          String    @default("USER")
+  isActive      Boolean   @default(true)
+  // Gamification fields
+  tokens        Int       @default(5)  // Starting balance
+  currentStreak Int       @default(0)
+  lastActive    DateTime?
+  lastChallenge DateTime? // Track daily quiz completion
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projects      Project[]
+  mediaFiles    MediaFile[]
 }
 
 model Project {
