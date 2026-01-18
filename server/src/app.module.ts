@@ -8,6 +8,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { MediaModule } from './media/media.module';
 import { AdminModule } from './admin/admin.module';
 import { GamificationModule } from './gamification/gamification.module';
+import { LibraryModule } from './library/library.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GamificationModule } from './gamification/gamification.module';
     MediaModule,
     AdminModule,
     GamificationModule,
+    LibraryModule,
   ],
 })
 export class AppModule { }

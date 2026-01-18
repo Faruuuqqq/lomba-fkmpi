@@ -79,4 +79,11 @@ export const gamificationAPI = {
   rewardWriting: (wordCount: number) => api.post('/gamification/reward-writing', { wordCount }),
 };
 
+// Library API
+export const libraryAPI = {
+  save: (data: any) => api.post('/library/save', data),
+  getAll: (projectId?: string) => api.get('/library', { params: { projectId } }),
+  remove: (id: string) => api.delete(`/library/${id}`),
+};
+
 export default api;

@@ -128,3 +128,21 @@ model MediaFile {
   
   @@map("media_files")
 }
+
+model SavedPaper {
+  id          String   @id @default(uuid())
+  paperId     String   // OpenAlex ID or DOI
+  title       String
+  authors     String[] // Array of author names
+  year        Int
+  abstract    String?  @db.Text
+  url         String?
+  type        String   @default("journal") // journal, book, etc
+  relevance   Int      @default(0)
+  userId      String
+  projectId   String?  // Optional: link to specific project
+  savedAt     DateTime @default(now())
+  
+  @@unique([userId, paperId]) // Prevent duplicate saves
+  @@map("saved_papers")
+}
