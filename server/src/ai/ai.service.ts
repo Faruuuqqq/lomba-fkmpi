@@ -1,8 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiAnalyzeDto, GenerateMapDto, EthicsCheckDto } from './ai.dto';
+
+// Define types for missing database models
+interface AiInteraction {
+  id: string;
+  userPrompt: string;
+  aiResponse: string;
+  timestamp: Date;
+  projectId: string;
+}
+
+interface ReasoningLog {
+  id: string;
+  projectId: string;
+  graphData: any;
+  analysis: string;
+  timestamp: Date;
+}
+
+interface AnalyticsLog {
+  id: string;
+  userId?: string;
+  feature: string;
+  duration: number;
+  timestamp: Date;
+  metadata?: any;
+}
 
 @Injectable()
 export class AiService {
@@ -17,15 +43,15 @@ export class AiService {
     });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new NotFoundException('Project not found');
     }
 
     if (project.userId !== userId) {
-      throw new Error('You do not have access to this project');
+      throw new ForbiddenException('You do not have access to this project');
     }
 
     if (!project.isAiUnlocked) {
-      throw new Error('AI is locked. Write at least 50 words to unlock AI assistance.');
+      throw new Error('AI is locked. Write at least 150 words to unlock AI assistance.');
     }
 
     const systemPrompt = `You are MITRA, a Socratic Tutor for academic writing. Your goal is to sharpen the student's logic.
@@ -60,8 +86,11 @@ Rules:
           )
         );
         aiResponse = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (aiResponse && aiResponse.trim()) {
+          console.log('Gemini API successful');
+        }
       } catch (e) {
-        console.error('Gemini failed, trying ZAI...', e.message);
+        console.error('Gemini failed, trying ZAI...', e.response?.data || e.message);
       }
     }
 
@@ -90,8 +119,11 @@ Rules:
           )
         );
         aiResponse = zAiResponse.data.choices?.[0]?.message?.content;
+        if (aiResponse && aiResponse.trim()) {
+          console.log('ZAI API successful');
+        }
       } catch (e) {
-        console.error('ZAI failed...', e.message);
+        console.error('ZAI failed...', e.response?.data || e.message);
       }
     }
 
@@ -101,13 +133,18 @@ Rules:
       aiResponse = this.getSmartSocraticResponse(dto.userQuery, dto.currentText);
     }
 
-    await this.prisma.aiInteraction.create({
-      data: {
-        userPrompt: dto.userQuery,
-        aiResponse,
-        projectId,
-      },
-    });
+    try {
+      await this.prisma.aiInteraction.create({
+        data: {
+          userPrompt: dto.userQuery,
+          aiResponse,
+          projectId,
+        },
+      });
+    } catch (dbError) {
+      console.error('Failed to save AI interaction:', dbError);
+      // Continue without failing the main functionality
+    }
 
     return {
       response: aiResponse,
@@ -146,11 +183,11 @@ Rules:
     });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new NotFoundException('Project not found');
     }
 
     if (project.userId !== userId) {
-      throw new Error('You do not have access to this project');
+      throw new ForbiddenException('You do not have access to this project');
     }
 
     return this.prisma.aiInteraction.findMany({
@@ -167,11 +204,11 @@ Rules:
     });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new NotFoundException('Project not found');
     }
 
     if (project.userId !== userId) {
-      throw new Error('You do not have access to this project');
+      throw new ForbiddenException('You do not have access to this project');
     }
 
     const systemPrompt = `Analyze the user's argument structure. Identify Premises, Evidence, and Conclusions. Output a JSON object representing a graph node-edge structure where nodes are statements and edges are logical connections (e.g., 'supports', 'contradicts'). Also identify any logical fallacies.
@@ -192,28 +229,39 @@ Return ONLY valid JSON in this exact format:
 
     const userPrompt = `Essay content:\n\n${dto.text}`;
 
-    const zAiResponse = await firstValueFrom(
-      this.httpService.post(
-        'https://api.z.ai/api/paas/v4/chat/completions',
-        {
-          model: 'glm-4.5',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 1000,
-          temperature: 0.3,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
-            'Content-Type': 'application/json',
+    let aiResponse = '{}';
+    
+    try {
+      const zAiResponse = await firstValueFrom(
+        this.httpService.post(
+          'https://api.z.ai/api/paas/v4/chat/completions',
+          {
+            model: 'glm-4.5',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            max_tokens: 1000,
+            temperature: 0.3,
           },
-        }
-      )
-    );
-
-    const aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || '{}';
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 20000,
+          }
+        )
+      );
+      
+      const response = (zAiResponse as any).data.choices?.[0]?.message?.content;
+      if (response && response.trim()) {
+        aiResponse = response;
+        console.log('Reasoning map API successful');
+      }
+    } catch (error) {
+      console.error('Reasoning map API failed:', error.response?.data || error.message);
+    }
 
     let graphData;
     let analysis = '';
@@ -229,30 +277,37 @@ Return ONLY valid JSON in this exact format:
       analysis = 'Failed to generate reasoning map. Please try again.';
     }
 
-    await this.prisma.reasoningLog.create({
-      data: {
-        projectId,
-        graphData,
-        analysis,
-      },
-    });
+    try {
+      await this.prisma.reasoningLog.create({
+        data: {
+          projectId,
+          graphData,
+          analysis,
+        },
+      });
+    } catch (dbError) {
+      console.error('Failed to save reasoning log:', dbError);
+    }
 
     // Log analytics
     const duration = Date.now() - startTime;
-    await this.prisma.analyticsLog.create({
-      data: {
-        userId,
-        feature: 'reasoning_map',
-        duration,
-        metadata: {
-          projectId,
-          nodeCount: graphData.nodes?.length || 0,
-          edgeCount: graphData.edges?.length || 0
+    try {
+      await this.prisma.analyticsLog.create({
+        data: {
+          userId,
+          feature: 'reasoning_map',
+          duration,
+          metadata: {
+            projectId,
+            nodeCount: graphData.nodes?.length || 0,
+            edgeCount: graphData.edges?.length || 0
+          }
         }
-      }
-    }).catch(() => {
+      });
+    } catch (dbError) {
+      console.error('Failed to log analytics:', dbError);
       // Don't fail if analytics logging fails
-    });
+    }
 
     return {
       graphData,
@@ -269,11 +324,11 @@ Return ONLY valid JSON in this exact format:
     });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new NotFoundException('Project not found');
     }
 
     if (project.userId !== userId) {
-      throw new Error('You do not have access to this project');
+      throw new ForbiddenException('You do not have access to this project');
     }
 
     const systemPrompt = `Scan the text for algorithmic bias, stereotypes, or generalized assumptions lacking evidence. Highlight specific sentences and explain *why* they might be ethically problematic. Do not rewrite them.
@@ -292,28 +347,39 @@ Return ONLY valid JSON in this exact format:
 
     const userPrompt = `Essay content:\n\n${dto.text}`;
 
-    const zAiResponse = await firstValueFrom(
-      this.httpService.post(
-        'https://api.z.ai/api/paas/v4/chat/completions',
-        {
-          model: 'glm-4.5',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 800,
-          temperature: 0.3,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
-            'Content-Type': 'application/json',
+    let aiResponse = '{}';
+    
+    try {
+      const zAiResponse = await firstValueFrom(
+        this.httpService.post(
+          'https://api.z.ai/api/paas/v4/chat/completions',
+          {
+            model: 'glm-4.5',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            max_tokens: 800,
+            temperature: 0.3,
           },
-        }
-      )
-    );
-
-    const aiResponse = (zAiResponse as any).data.choices?.[0]?.message?.content || '{}';
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.ZAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 20000,
+          }
+        )
+      );
+      
+      const response = (zAiResponse as any).data.choices?.[0]?.message?.content;
+      if (response && response.trim()) {
+        aiResponse = response;
+        console.log('Ethics check API successful');
+      }
+    } catch (error) {
+      console.error('Ethics check API failed:', error.response?.data || error.message);
+    }
 
     let issues = [];
     let summary = '';
@@ -331,19 +397,22 @@ Return ONLY valid JSON in this exact format:
 
     // Log analytics
     const duration = Date.now() - startTime;
-    await this.prisma.analyticsLog.create({
-      data: {
-        userId,
-        feature: 'ethics_check',
-        duration,
-        metadata: {
-          projectId,
-          issuesFound: issues.length
+    try {
+      await this.prisma.analyticsLog.create({
+        data: {
+          userId,
+          feature: 'ethics_check',
+          duration,
+          metadata: {
+            projectId,
+            issuesFound: issues.length
+          }
         }
-      }
-    }).catch(() => {
+      });
+    } catch (dbError) {
+      console.error('Failed to log analytics:', dbError);
       // Don't fail if analytics logging fails
-    });
+    }
 
     return {
       issues,

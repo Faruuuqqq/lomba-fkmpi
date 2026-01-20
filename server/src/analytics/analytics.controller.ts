@@ -1,14 +1,23 @@
-import { Controller, Post, Get, Body, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, HttpException, HttpStatus, HttpCode, UseGuards } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { LogAnalyticsDto } from './analytics.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../common/guards/admin.guard';
 
+@ApiTags('Analytics')
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   @Post('log')
-  async logAnalytics(@Body() body: { userId?: string; feature: string; duration: number; metadata?: any }) {
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Log analytics data' })
+  @ApiResponse({ status: 200, description: 'Analytics logged successfully' })
+  @ApiBody({ type: LogAnalyticsDto })
+  async logAnalytics(@Body() dto: LogAnalyticsDto) {
     try {
-      const { userId, feature, duration, metadata } = body;
+      const { userId, feature, duration, metadata } = dto;
 
       const analyticsLog = await this.prisma.analyticsLog.create({
         data: {
@@ -27,6 +36,10 @@ export class AnalyticsController {
   }
 
   @Get('overview')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get analytics overview' })
+  @ApiResponse({ status: 200, description: 'Overview retrieved' })
   async getAnalyticsOverview() {
     try {
       const data = await this.prisma.analyticsLog.groupBy({
@@ -50,6 +63,11 @@ export class AnalyticsController {
   }
 
   @Get('daily-stats')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get daily usage statistics' })
+  @ApiQuery({ name: 'days', required: false })
+  @ApiResponse({ status: 200, description: 'Stats retrieved' })
   async getDailyUsageStats(@Query('days') days: string = '30') {
     try {
       const startDate = new Date();
@@ -73,7 +91,7 @@ export class AnalyticsController {
 
       // Group by date and feature
       const groupedData: { [date: string]: { [feature: string]: number } } = {};
-      
+
       data.forEach(item => {
         const date = item.timestamp.toISOString().split('T')[0];
         if (!groupedData[date]) {
@@ -93,6 +111,11 @@ export class AnalyticsController {
   }
 
   @Get('performance')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get performance metrics' })
+  @ApiQuery({ name: 'feature', required: false })
+  @ApiResponse({ status: 200, description: 'Metrics retrieved' })
   async getPerformanceMetrics(@Query('feature') feature?: string) {
     try {
       const whereClause = feature ? { feature } : {};

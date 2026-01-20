@@ -4,9 +4,10 @@ import { AiController } from './ai.controller';
 import { AiService } from './ai.service';
 import { AdvancedAIController } from './advanced-ai.controller';
 import { AdvancedAIService } from './advanced-ai.service';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [HttpModule],
+  imports: [HttpModule, PrismaModule],
   controllers: [AiController, AdvancedAIController],
   providers: [AiService, AdvancedAIService],
   exports: [AiService, AdvancedAIService],

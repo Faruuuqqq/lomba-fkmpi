@@ -62,7 +62,7 @@ export class ProjectsService {
     }
 
     const wordCount = this.countWords(dto.content);
-    const isAiUnlocked = wordCount >= 50;
+    const isAiUnlocked = wordCount >= 150;
 
     const updatedProject = await this.prisma.project.update({
       where: { id },
@@ -79,7 +79,7 @@ export class ProjectsService {
       success: true,
       isAiUnlocked,
       wordCount,
-      wordsToUnlock: Math.max(0, 50 - wordCount),
+      wordsToUnlock: Math.max(0, 150 - wordCount),
       project: updatedProject,
     };
   }
@@ -162,10 +162,10 @@ export class ProjectsService {
     const shouldCreateSnapshot =
       !latestSnapshot ||
       (new Date().getTime() - latestSnapshot.timestamp.getTime() > 600000) ||
-      wordCount === 50 && project.wordCount < 50;
+      wordCount === 150 && project.wordCount < 150;
 
     if (shouldCreateSnapshot) {
-      await this.createSnapshot(project, content, wordCount >= 50 ? 'POST_AI_FEEDBACK' : 'INITIAL_DRAFT');
+      await this.createSnapshot(project, content, wordCount >= 150 ? 'POST_AI_FEEDBACK' : 'INITIAL_DRAFT');
     }
   }
 

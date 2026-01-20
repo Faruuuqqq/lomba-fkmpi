@@ -1,7 +1,12 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { GamificationService } from './gamification.service';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { SubmitChallengeDto, CheckBalanceDto, RewardWritingDto } from './gamification.dto';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('Gamification')
+@ApiBearerAuth()
 @Controller('gamification')
 @UseGuards(JwtAuthGuard)
 export class GamificationController {
@@ -9,43 +14,59 @@ export class GamificationController {
 
     // Get user's token stats
     @Get('stats')
-    async getStats(@Request() req) {
-        return this.gamificationService.getUserStats(req.user.sub);
+    @ApiOperation({ summary: 'Get user token stats' })
+    @ApiResponse({ status: 200, description: 'User stats retrieved' })
+    async getStats(@CurrentUser() user: any) {
+        return this.gamificationService.getUserStats(user.id);
     }
 
     // Get daily challenge
     @Get('challenge')
-    async getDailyChallenge(@Request() req) {
-        return this.gamificationService.getDailyChallenge(req.user.sub);
+    @ApiOperation({ summary: 'Get daily challenge' })
+    @ApiResponse({ status: 200, description: 'Daily challenge retrieved' })
+    async getDailyChallenge(@CurrentUser() user: any) {
+        return this.gamificationService.getDailyChallenge(user.id);
     }
 
     // Submit daily challenge answer
     @Post('challenge/submit')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Submit daily challenge answer' })
+    @ApiResponse({ status: 200, description: 'Challenge submitted' })
+    @ApiBody({ type: SubmitChallengeDto })
     async submitChallenge(
-        @Request() req,
-        @Body() body: { challengeId: number; answerIndex: number },
+        @CurrentUser() user: any,
+        @Body() dto: SubmitChallengeDto,
     ) {
         return this.gamificationService.submitDailyChallenge(
-            req.user.sub,
-            body.challengeId,
-            body.answerIndex,
+            user.id,
+            dto.challengeId,
+            dto.answerIndex,
         );
     }
 
     // Check if user has enough tokens (utility endpoint)
     @Post('check-balance')
-    async checkBalance(@Request() req, @Body() body: { cost: number }) {
-        const stats = await this.gamificationService.getUserStats(req.user.sub);
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Check token balance' })
+    @ApiResponse({ status: 200, description: 'Balance check result' })
+    @ApiBody({ type: CheckBalanceDto })
+    async checkBalance(@CurrentUser() user: any, @Body() dto: CheckBalanceDto) {
+        const stats = await this.gamificationService.getUserStats(user.id);
         return {
-            hasEnough: stats.tokens >= body.cost,
+            hasEnough: stats.tokens >= dto.cost,
             currentBalance: stats.tokens,
-            needed: body.cost,
+            needed: dto.cost,
         };
     }
 
     // Reward user for writing (Write-to-Earn)
     @Post('reward-writing')
-    async rewardWriting(@Request() req, @Body() body: { wordCount: number }) {
-        return this.gamificationService.rewardWriting(req.user.sub, body.wordCount);
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Reward user for writing' })
+    @ApiResponse({ status: 200, description: 'Writing rewarded' })
+    @ApiBody({ type: RewardWritingDto })
+    async rewardWriting(@CurrentUser() user: any, @Body() dto: RewardWritingDto) {
+        return this.gamificationService.rewardWriting(user.id, dto.wordCount);
     }
 }
