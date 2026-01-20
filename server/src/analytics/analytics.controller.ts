@@ -11,6 +11,8 @@ export class AnalyticsController {
   constructor(private readonly prisma: PrismaService) { }
 
   @Post('log')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Log analytics data' })
   @ApiResponse({ status: 200, description: 'Analytics logged successfully' })

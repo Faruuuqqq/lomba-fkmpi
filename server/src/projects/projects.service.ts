@@ -161,7 +161,7 @@ export class ProjectsService {
 
     const shouldCreateSnapshot =
       !latestSnapshot ||
-      (new Date().getTime() - latestSnapshot.timestamp.getTime() > 600000) ||
+      (latestSnapshot.timestamp && new Date().getTime() - latestSnapshot.timestamp.getTime() > 600000) ||
       wordCount === 150 && project.wordCount < 150;
 
     if (shouldCreateSnapshot) {

@@ -11,6 +11,7 @@ import { Project, AiInteraction } from '@/types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
+import { useHotkeys } from '@/hooks/useHotkeys';
 
 export default function ProjectPage() {
   const { id } = useParams();
@@ -90,6 +91,11 @@ export default function ProjectPage() {
 
     return () => clearTimeout(timer);
   }, [content]);
+
+  // Keyboard Shortcuts
+  useHotkeys('ctrl+s', () => {
+    handleSave();
+  });
 
   const handleNewChat = (interaction: AiInteraction) => {
     setChatHistory([...chatHistory, interaction]);

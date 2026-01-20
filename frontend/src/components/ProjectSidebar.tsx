@@ -124,17 +124,37 @@ export function ProjectSidebar() {
             {/* Projects List */}
             <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
-                    <div className="p-4 text-center">
-                        <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        {!isCollapsed && <p className="text-xs font-medium mt-2 text-zinc-500">Loading...</p>}
+                    <div className="p-3 space-y-2">
+                        {/* Loading Skeletons */}
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex flex-col gap-2 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/50 animate-pulse">
+                                <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4"></div>
+                                <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2"></div>
+                            </div>
+                        ))}
                     </div>
                 ) : filteredProjects.length === 0 ? (
                     !isCollapsed && (
-                        <div className="p-4 text-center">
-                            <FileText className="w-8 h-8 mx-auto mb-2 text-zinc-300" />
-                            <p className="text-xs font-medium text-zinc-500">
-                                {searchQuery ? 'No projects found' : 'No projects yet'}
+                        <div className="h-full flex flex-col items-center justify-center p-6 text-center opacity-80">
+                            <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4 border-2 border-dashed border-zinc-300 dark:border-zinc-700">
+                                <FileText className="w-8 h-8 text-zinc-400" />
+                            </div>
+                            <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+                                {searchQuery ? 'No matches' : 'No projects'}
+                            </h3>
+                            <p className="text-xs text-zinc-500 max-w-[150px]">
+                                {searchQuery
+                                    ? "Try checking your spelling or use different keywords"
+                                    : "Start your first critical thinking journey today"}
                             </p>
+                            {!searchQuery && (
+                                <button
+                                    onClick={createNewProject}
+                                    className="mt-4 text-xs font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wide flex items-center gap-1"
+                                >
+                                    Create Project <Plus className="w-3 h-3" />
+                                </button>
+                            )}
                         </div>
                     )
                 ) : (
@@ -152,22 +172,24 @@ export function ProjectSidebar() {
                                     </div>
                                 ) : (
                                     <div className="flex items-start gap-2">
-                                        <FileText className="w-4 h-4 mt-0.5 flex-shrink-0 text-zinc-600 dark:text-zinc-400" />
+                                        <FileText className="w-4 h-4 mt-0.5 flex-shrink-0 text-zinc-600 dark:text-zinc-400 transition-colors group-hover:text-indigo-600" />
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100">
+                                            <h3 className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-700 transition-colors">
                                                 {project.title}
                                             </h3>
-                                            <p className="text-xs text-zinc-500 mt-0.5">
-                                                {new Date(project.updatedAt).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
-                                            </p>
-                                            {project.isAiUnlocked && (
-                                                <span className="inline-block mt-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold rounded">
-                                                    AI ✓
-                                                </span>
-                                            )}
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <p className="text-xs text-zinc-500">
+                                                    {new Date(project.updatedAt).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                                {project.isAiUnlocked && (
+                                                    <span className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-[10px] uppercase font-bold tracking-wider rounded-sm">
+                                                        AI
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}

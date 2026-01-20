@@ -7,6 +7,7 @@ import { aiAPI, libraryAPI } from '@/lib/api';
 import { Modal } from './Modal';
 import toast from 'react-hot-toast';
 import { useGamification } from '@/contexts/GamificationContext';
+import { useHotkeys } from '@/hooks/useHotkeys';
 
 interface AiSidebarProps {
   projectId: string;
@@ -246,6 +247,12 @@ export function AiSidebar({
     toast.success('✓ Inserted to editor');
   };
 
+  useHotkeys('ctrl+enter', () => {
+    if (!isLoading && query.trim()) {
+      handleSend();
+    }
+  });
+
   return (
     <>
       <aside className="w-80 h-screen bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col">
@@ -264,8 +271,8 @@ export function AiSidebar({
             <button
               onClick={() => setActiveTab('chat')}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-xs font-semibold transition-all ${activeTab === 'chat'
-                  ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
             >
               <Brain className="w-3.5 h-3.5" />
@@ -274,8 +281,8 @@ export function AiSidebar({
             <button
               onClick={() => setActiveTab('citations')}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-xs font-semibold transition-all ${activeTab === 'citations'
-                  ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
@@ -284,8 +291,8 @@ export function AiSidebar({
             <button
               onClick={() => setActiveTab('tools')}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-xs font-semibold transition-all ${activeTab === 'tools'
-                  ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
             >
               <Wrench className="w-3.5 h-3.5" />
@@ -619,17 +626,17 @@ export function AiSidebar({
         ) : plagiarismResult ? (
           <div className="space-y-4">
             <div className={`p-4 border rounded-none ${plagiarismResult.isOriginal
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
               }`}>
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle2 className={`w-5 h-5 ${plagiarismResult.isOriginal
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-yellow-600 dark:text-yellow-400'
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-yellow-600 dark:text-yellow-400'
                   }`} />
                 <h3 className={`font-bold ${plagiarismResult.isOriginal
-                    ? 'text-green-900 dark:text-green-100'
-                    : 'text-yellow-900 dark:text-yellow-100'
+                  ? 'text-green-900 dark:text-green-100'
+                  : 'text-yellow-900 dark:text-yellow-100'
                   }`}>
                   {plagiarismResult.isOriginal ? 'Original Content' : 'Similarity Detected'}
                 </h3>
@@ -691,8 +698,8 @@ export function AiSidebar({
                   {logicMapResult.graphData.nodes?.map((node: any, idx: number) => (
                     <div key={idx} className="p-2 bg-white dark:bg-zinc-900 border-4 border-bauhaus dark:border-zinc-700 rounded">
                       <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${node.type === 'premise' ? 'bg-blue-100 text-blue-800' :
-                          node.type === 'evidence' ? 'bg-green-100 text-green-800' :
-                            'bg-purple-100 text-purple-800'
+                        node.type === 'evidence' ? 'bg-green-100 text-green-800' :
+                          'bg-purple-100 text-purple-800'
                         }`}>
                         {node.type}
                       </span>
