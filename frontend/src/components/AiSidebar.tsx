@@ -200,8 +200,8 @@ export function AiSidebar({
   };
 
   const handleLogicMap = async () => {
-    if (!currentContent || currentContent.length < 100) {
-      toast.error('Write at least 100 characters to generate logic map');
+    if (!currentContent || currentContent.length < 30) {
+      toast.error(`Write at least 30 characters (Current: ${currentContent?.length || 0})`);
       return;
     }
 
@@ -216,14 +216,17 @@ export function AiSidebar({
 
     try {
       addTokens(-15);
+      console.log('Generating map for:', currentContent.substring(0, 20) + '...');
       const { data } = await aiAPI.generateMap(projectId, currentContent);
+      console.log('Map generated:', data);
       setLogicMapResult(data);
       toast.success('✓ Logic map generated');
     } catch (error: any) {
       console.error('Logic map error:', error);
       addTokens(15); // Refund
       toast.error(error.response?.data?.message || 'Logic map generation failed. Try again.');
-      setShowLogicMapModal(false);
+      // Keep modal open but show error state? 
+      // setShowLogicMapModal(false); // Let user see the error in the modal if we add logic for it
     } finally {
       setIsGeneratingMap(false);
     }

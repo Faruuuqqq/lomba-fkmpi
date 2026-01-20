@@ -165,7 +165,14 @@ Be thorough but focus on significant issues. Academic writing should be formal a
         )
       );
 
-      const result = JSON.parse(response.data.choices[0].message.content);
+      const content = response.data.choices[0].message.content;
+      console.log('Grammar check response:', content);
+
+      // Sanitize JSON
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : content;
+
+      const result = JSON.parse(jsonStr);
 
       // Add position data to issues
       const issuesWithPosition = (result.issues || []).map((issue: any, idx: number) => ({
@@ -182,8 +189,8 @@ Be thorough but focus on significant issues. Academic writing should be formal a
         score: result.score || 85,
         correctedText: result.correctedText || text
       };
-    } catch (error) {
-      console.error('Grammar check error:', error);
+    } catch (error: any) {
+      console.error('Grammar check error detail:', error.response?.data || error.message);
       // Fallback to heuristic check
       return this.heuristicGrammarCheck(text);
     }
@@ -279,7 +286,12 @@ Score 80-100: Likely plagiarized`
         )
       );
 
-      const result = JSON.parse(response.data.choices[0].message.content);
+      const content = response.data.choices[0].message.content;
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : content;
+
+      const result = JSON.parse(jsonStr);
 
       return {
         similarityScore: result.similarityScore || 0,
