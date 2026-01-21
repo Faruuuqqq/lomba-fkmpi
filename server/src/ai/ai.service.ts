@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -32,22 +32,33 @@ interface AnalyticsLog {
 
 @Injectable()
 export class AiService {
+  private readonly logger = new Logger(AiService.name);
+
   constructor(
     private prisma: PrismaService,
     private httpService: HttpService,
   ) { }
 
   async analyze(projectId: string, userId: string, dto: AiAnalyzeDto) {
+    // Validate input parameters
+    if (!projectId || !userId) {
+      throw new Error('Missing required parameters: projectId and userId');
+    }
+
+    if (!dto.userQuery || dto.userQuery.trim().length === 0) {
+      throw new Error('User query cannot be empty');
+    }
+
+    if (dto.userQuery.length > 1000) {
+      throw new Error('User query too long (max 1000 characters)');
+    }
+
     const project = await this.prisma.project.findUnique({
       where: { id: projectId },
     });
 
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
-    if (project.userId !== userId) {
-      throw new ForbiddenException('You do not have access to this project');
+    if (!project || project.userId !== userId) {
+      throw new NotFoundException('Project not found or access denied');
     }
 
     if (!project.isAiUnlocked) {
@@ -69,15 +80,61 @@ Rules:
 
     let aiResponse = '';
 
+    const groqKey = process.env.GROQ_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
     const zaiKey = process.env.ZAI_API_KEY;
 
-    // Try Gemini First (using 1.5-flash for reliability and free tier)
-    if (geminiKey && geminiKey !== 'your-gemini-api-key-here') {
+    // Try Groq First (Primary - Fast and Free)
+    if (groqKey && groqKey !== 'your-groq-api-key-here') {
+      try {
+        const groqResponse = await firstValueFrom(
+          this.httpService.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+              model: 'llama-3.3-70b-versatile',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              max_tokens: 200,
+              temperature: 0.7,
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${groqKey}`,
+                'Content-Type': 'application/json',
+              },
+              timeout: 15000,
+            }
+          )
+        );
+        aiResponse = groqResponse.data.choices?.[0]?.message?.content;
+        if (aiResponse && aiResponse.trim()) {
+        this.logger.log('✅ Groq API successful - Primary');
+       } catch (e: any) {
+        this.logger.error('Groq API call failed:', {
+          message: e.message,
+          status: e.response?.status,
+          data: e.response?.data,
+          config: e.config
+        });
+        
+        if (e.response?.data?.error?.code === 'invalid_api_key') {
+          this.logger.error('❌ Groq API Key invalid. Get your free key at: https://console.groq.com/keys');
+        } else if (e.response?.status === 429) {
+          this.logger.warn('⚠️ Groq rate limit exceeded, trying Gemini...');
+        } else {
+          this.logger.error('❌ Groq failed, trying Gemini...', e.response?.data?.error || e.message);
+        }
+      }
+    }
+
+    // Try Gemini as Secondary
+    if (!aiResponse && geminiKey && geminiKey !== 'your-gemini-api-key-here') {
       try {
         const geminiResponse = await firstValueFrom(
           this.httpService.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
             {
               contents: [{ role: 'user', parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
               generationConfig: { maxOutputTokens: 200, temperature: 0.7 }
@@ -87,14 +144,90 @@ Rules:
         );
         aiResponse = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (aiResponse && aiResponse.trim()) {
-          console.log('Gemini API successful');
-        }
-      } catch (e) {
-        console.error('Gemini failed, trying ZAI...', e.response?.data || e.message);
+        this.logger.log('✅ Gemini API successful - Secondary');
+      } catch (e: any) {
+        this.logger.error('❌ Gemini failed, trying ZAI...', e.response?.data?.error?.message || e.message);
       }
     }
 
-    // Try ZAI secondary
+    // Try ZAI as Tertiary
+    if (!aiResponse && zaiKey) {
+      try {
+        const zAiResponse = await firstValueFrom(
+          this.httpService.post(
+            'https://api.z.ai/api/paas/v4/chat/completions',
+            {
+              model: 'glm-4-plus',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              max_tokens: 200,
+              temperature: 0.7,
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${zaiKey}`,
+                'Content-Type': 'application/json',
+              },
+              timeout: 15000,
+            }
+          )
+        );
+        aiResponse = zAiResponse.data.choices?.[0]?.message?.content;
+        if (aiResponse && aiResponse.trim()) {
+          this.logger.log('✅ ZAI API successful - Tertiary');
+        }
+      } catch (e: any) {
+        console.error('❌ ZAI failed, using fallback...', e.response?.data?.error || e.message);
+      }
+    }
+      } catch (e) {
+        this.logger.error('Gemini failed, trying ZAI...', e.response?.data?.error?.message || e.message);
+      }
+    }
+
+    // FINAL FALLBACK: Smart Socratic Mock
+    if (!aiResponse) {
+      this.logger.warn('API failure or insufficient balance. Triggering Socratic Lite Mode.');
+      aiResponse = this.getSmartSocraticResponse(dto.userQuery, dto.currentText);
+    }
+      try {
+        const groqResponse = await firstValueFrom(
+          this.httpService.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+              model: 'llama-3.3-70b-versatile',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              max_tokens: 200,
+              temperature: 0.7,
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              timeout: 15000,
+            }
+          )
+        );
+        aiResponse = groqResponse.data.choices?.[0]?.message?.content;
+        if (aiResponse && aiResponse.trim()) {
+          console.log('✅ Groq API successful');
+        }
+      } catch (e: any) {
+        if (e.response?.data?.error?.code === 'invalid_api_key') {
+          console.error('❌ Groq API Key invalid. Get your free key at: https://console.groq.com/keys');
+        } else {
+          console.error('❌ Groq failed:', e.response?.data || e.message);
+        }
+      }
+    }
+
+    // Try ZAI tertiary
     if (!aiResponse && zaiKey) {
       try {
         const zAiResponse = await firstValueFrom(
@@ -123,13 +256,13 @@ Rules:
           console.log('ZAI API successful');
         }
       } catch (e) {
-        console.error('ZAI failed...', e.response?.data || e.message);
+          this.logger.error('ZAI failed...', e.response?.data || e.message);
       }
     }
 
     // FINAL FALLBACK: Smart Socratic Mock
     if (!aiResponse) {
-      console.log('API failure or insufficient balance. Triggering Socratic Lite Mode.');
+      this.logger.warn('API failure or insufficient balance. Triggering Socratic Lite Mode.');
       aiResponse = this.getSmartSocraticResponse(dto.userQuery, dto.currentText);
     }
 
@@ -142,9 +275,13 @@ Rules:
         },
       });
     } catch (dbError) {
-      console.error('Failed to save AI interaction:', dbError);
+      this.logger.error('Failed to save AI interaction:', dbError);
       // Continue without failing the main functionality
     }
+
+    // Mask API keys in logs for security
+    const maskedGroqKey = groqKey ? `${groqKey.substring(0, 8)}...${groqKey.substring(groqKey.length - 4)}` : 'not set';
+    this.logger.log(`API keys status - Groq: ${maskedGroqKey}, Gemini: ${geminiKey ? 'set' : 'not set'}, ZAI: ${zaiKey ? 'set' : 'not set'}`);
 
     return {
       response: aiResponse,

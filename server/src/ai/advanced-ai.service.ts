@@ -59,41 +59,76 @@ export class AdvancedAIService {
   ): Promise<AIResponse> {
     try {
       // Use Z.AI API for Devil's Advocate
-      const response = await firstValueFrom(
-        this.httpService.post(
-          'https://api.z.ai/api/paas/v4/chat/completions',
-          {
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: `You are a rigorous academic reviewer ("Dosen Killer"). Your role is to:
-1. Find logical inconsistencies, weak premises, and lack of empirical evidence.
-2. Be direct, strict, but constructive. Do not sugarcoat your feedback.
-3. Identify logical fallacies immediately.
-4. Demand better argumentation and stronger proofs.
-5. If the argument is weak, say it clearly.
+    const groqKey = process.env.GROQ_API_KEY;
+    const zaiKey = process.env.ZAI_API_KEY;
+    let response;
 
-Keep responses under 3 sentences. Cut straight to the point. Be the toughest critic the student has ever faced.`
-              },
-              {
-                role: 'user',
-                content: `Essay content: ${userContent}\n\nChallenge this argument from a Devil's Advocate perspective.`
-              }
-            ],
-            temperature: 0.8,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.ZAI_API_KEY}`,
-              'Content-Type': 'application/json',
+    // Try Groq First (Primary - Fast and Free)
+    if (groqKey) {
+      try {
+        response = await firstValueFrom(
+          this.httpService.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+              model: 'llama-3.3-70b-versatile',
+              messages: [
+                { role: 'system', content: 'You are a Devil\'s Advocate AI assistant. Your role is to challenge the user\'s arguments by playing devil\'s advocate. Find weaknesses, counterarguments, and alternative perspectives in a respectful but critical way.' },
+                { role: 'user', content: prompt },
+              ],
+              max_tokens: 300,
+              temperature: 0.8,
             },
-          }
-        )
-      );
+            {
+              headers: {
+                Authorization: `Bearer ${groqKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+        );
+        console.log('✅ Groq Devil\'s Advocate successful - Primary');
+      } catch (error: any) {
+        if (error.response?.data?.error?.code === 'invalid_api_key') {
+          console.error('❌ Groq API Key invalid. Get your free key at: https://console.groq.com/keys');
+        } else if (error.response?.status === 429) {
+          console.error('⚠️ Groq rate limit exceeded, trying ZAI...');
+        } else {
+          console.error('❌ Groq Devil\'s Advocate failed, trying ZAI:', error.response?.data?.error || error.message);
+        }
+      }
+    }
 
-      return {
-        text: response.data.choices[0].message.content,
+    // Fallback to ZAI if Groq fails
+    if (!response && zaiKey) {
+      try {
+        response = await firstValueFrom(
+          this.httpService.post(
+            'https://api.z.ai/api/paas/v4/chat/completions',
+            {
+              model: 'glm-4-plus',
+              messages: [
+                { role: 'system', content: 'You are a Devil\'s Advocate AI assistant. Your role is to challenge the user\'s arguments by playing devil\'s advocate. Find weaknesses, counterarguments, and alternative perspectives in a respectful but critical way.' },
+                { role: 'user', content: prompt },
+              ],
+              max_tokens: 300,
+              temperature: 0.8,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${zaiKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+        );
+        console.log('✅ ZAI Devil\'s Advocate successful - Fallback');
+      } catch (error) {
+        console.error('❌ ZAI Devil\'s Advocate failed:', error.response?.data?.error || error.message);
+      }
+    }
+
+       return {
+         text: response?.data?.choices?.[0]?.message?.content || 'Unable to process request at the moment.',
         persona: 'devils_advocate',
         suggestions: [
           'Consider counterarguments',
