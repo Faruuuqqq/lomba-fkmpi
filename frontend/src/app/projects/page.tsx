@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
+import { GamificationWidget } from '@/components/GamificationWidget';
 import { Button } from '@/components/ui/button';
 import { BookOpen, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
 
@@ -23,7 +24,12 @@ export default function ProjectsPage() {
             <ProjectSidebar />
 
             {/* CENTER: Welcome / Getting Started */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Gamification Widget */}
+                <div className="absolute top-4 right-4 z-10">
+                    <GamificationWidget />
+                </div>
+
                 {/* Content */}
                 <div className="flex-1 overflow-auto">
                     <div className="max-w-5xl mx-auto p-8 space-y-8">
@@ -54,7 +60,7 @@ export default function ProjectsPage() {
                                 Write your ideas first, then let AI challenge your thinking.
                             </p>
 
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 flex-wrap">
                                 <Button
                                     onClick={() => router.push('/library')}
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-none font-semibold uppercase tracking-wide shadow-bauhaus-lg-bauhaus"
@@ -63,12 +69,18 @@ export default function ProjectsPage() {
                                     Explore Research Library
                                 </Button>
                                 <Button
-                                    onClick={() => router.push('/')}
-                                    variant="outline"
-                                    className="border-4 border-bauhaus dark:border-zinc-700 rounded-none font-semibold uppercase tracking-wide hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                                    onClick={() => router.push('/ai-chat')}
+                                    className="bg-purple-600 hover:bg-purple-700 text-white rounded-none font-semibold uppercase tracking-wide shadow-bauhaus-lg-bauhaus"
                                 >
-                                    Learn More
-                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Start AI Chat
+                                </Button>
+                                <Button
+                                    onClick={() => router.push('/gamification')}
+                                    className="bg-amber-500 hover:bg-amber-600 text-white rounded-none font-semibold uppercase tracking-wide shadow-bauhaus-lg-bauhaus"
+                                >
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    View Progress
                                 </Button>
                             </div>
                         </div>

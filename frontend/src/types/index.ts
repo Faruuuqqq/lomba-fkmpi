@@ -82,3 +82,52 @@ export interface EthicsCheck {
   summary: string;
   timestamp: string;
 }
+
+export interface GrammarIssue {
+  type: string;
+  message: string;
+  suggestion?: string;
+}
+
+export interface GrammarResult {
+  summary: string;
+  issues: GrammarIssue[];
+  timestamp: string;
+}
+
+export interface PlagiarismSource {
+  title: string;
+  similarity: number;
+  url?: string;
+}
+
+export interface PlagiarismResult {
+  isOriginal: boolean;
+  similarityScore: number;
+  sources: PlagiarismSource[];
+  timestamp: string;
+}
+
+export interface LogicMapNode {
+  id: string;
+  type: 'premise' | 'evidence' | 'conclusion';
+  label: string;
+}
+
+export interface LogicMapResult {
+  analysis: string;
+  graphData: {
+    nodes: LogicMapNode[];
+    edges?: any[];
+  };
+  timestamp: string;
+}
+
+export type ToolResultType = 'grammar' | 'plagiarism' | 'logicMap';
+
+export interface ToolResult {
+  id: string;
+  type: ToolResultType;
+  data: GrammarResult | PlagiarismResult | LogicMapResult;
+  timestamp: string;
+}

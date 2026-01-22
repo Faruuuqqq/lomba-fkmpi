@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, BookOpen, Wrench, Copy, ArrowDownToLine, Coins, Brain, AlertCircle, CheckCircle2, RefreshCw, Trash2, Quote } from 'lucide-react';
-import { AiInteraction } from '@/types';
+import { Send, Bot, User, Sparkles, BookOpen, Wrench, Copy, ArrowDownToLine, Coins, Brain, AlertCircle, CheckCircle2, RefreshCw, Trash2, Quote, Clock, FileText, GitBranch, BarChart3 } from 'lucide-react';
+import { AiInteraction, ToolResult } from '@/types';
 import { aiAPI, libraryAPI } from '@/lib/api';
 import { Modal } from './Modal';
 import toast from 'react-hot-toast';
@@ -20,7 +20,7 @@ interface AiSidebarProps {
   editorInstance?: any;
 }
 
-type TabType = 'chat' | 'citations' | 'tools';
+type TabType = 'chat' | 'citations' | 'tools' | 'results';
 
 export function AiSidebar({
   projectId,
@@ -52,6 +52,7 @@ export function AiSidebar({
   const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
   const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
   const [isGeneratingMap, setIsGeneratingMap] = useState(false);
+  const [toolResults, setToolResults] = useState<ToolResult[]>([]);
 
   const { stats, setShowDailyChallenge, addTokens } = useGamification();
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -157,7 +158,15 @@ export function AiSidebar({
     try {
       addTokens(-10);
       const { data } = await aiAPI.checkGrammar(projectId, currentContent);
-      setGrammarResult(data);
+      const grammarResultWithTimestamp = { ...data, timestamp: new Date().toISOString() };
+      setGrammarResult(grammarResultWithTimestamp);
+      const newResult: ToolResult = {
+        id: Date.now().toString(),
+        type: 'grammar',
+        data: grammarResultWithTimestamp,
+        timestamp: new Date().toISOString()
+      };
+      setToolResults(prev => [newResult, ...prev]);
       toast.success('✓ Grammar check complete');
     } catch (error: any) {
       console.error('Grammar check error:', error);
@@ -187,7 +196,15 @@ export function AiSidebar({
     try {
       addTokens(-10);
       const { data } = await aiAPI.checkPlagiarism(projectId, currentContent);
-      setPlagiarismResult(data);
+      const plagiarismResultWithTimestamp = { ...data, timestamp: new Date().toISOString() };
+      setPlagiarismResult(plagiarismResultWithTimestamp);
+      const newResult: ToolResult = {
+        id: Date.now().toString(),
+        type: 'plagiarism',
+        data: plagiarismResultWithTimestamp,
+        timestamp: new Date().toISOString()
+      };
+      setToolResults(prev => [newResult, ...prev]);
       toast.success('✓ Plagiarism check complete');
     } catch (error: any) {
       console.error('Plagiarism check error:', error);
@@ -219,7 +236,15 @@ export function AiSidebar({
       console.log('Generating map for:', currentContent.substring(0, 20) + '...');
       const { data } = await aiAPI.generateMap(projectId, currentContent);
       console.log('Map generated:', data);
-      setLogicMapResult(data);
+      const logicMapResultWithTimestamp = { ...data, timestamp: new Date().toISOString() };
+      setLogicMapResult(logicMapResultWithTimestamp);
+      const newResult: ToolResult = {
+        id: Date.now().toString(),
+        type: 'logicMap',
+        data: logicMapResultWithTimestamp,
+        timestamp: new Date().toISOString()
+      };
+      setToolResults(prev => [newResult, ...prev]);
       toast.success('✓ Logic map generated');
     } catch (error: any) {
       console.error('Logic map error:', error);
@@ -300,6 +325,16 @@ export function AiSidebar({
             >
               <Wrench className="w-3.5 h-3.5" />
               Tools
+            </button>
+            <button
+              onClick={() => setActiveTab('results')}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-none text-xs font-semibold transition-all ${activeTab === 'results'
+                ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shadow-bauhaus-lg-bauhaus'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              Results
             </button>
           </div>
         </div>
@@ -568,6 +603,94 @@ export function AiSidebar({
                   </p>
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Results Tab */}
+          {activeTab === 'results' && (
+            <div className="flex-1 overflow-y-auto p-4 bg-zinc-50/50 dark:bg-zinc-900/50">
+              {toolResults.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 mx-auto mb-3 text-zinc-300 dark:text-zinc-700" />
+                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">
+                    No results yet
+                  </p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-600">
+                    Use AI tools to generate analysis results
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <h3 className="text-xs font-bold uppercase text-zinc-500">Analysis History</h3>
+                    <button
+                      onClick={() => setToolResults([])}
+                      className="text-xs text-red-600 font-semibold hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  {toolResults.map((result) => (
+                    <div
+                      key={result.id}
+                      onClick={() => {
+                        if (result.type === 'grammar') {
+                          setGrammarResult(result.data);
+                          setShowGrammarModal(true);
+                        } else if (result.type === 'plagiarism') {
+                          setPlagiarismResult(result.data);
+                          setShowPlagiarismModal(true);
+                        } else if (result.type === 'logicMap') {
+                          setLogicMapResult(result.data);
+                          setShowLogicMapModal(true);
+                        }
+                      }}
+                      className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none p-3 shadow-bauhaus-lg-bauhaus hover:shadow-bauhaus-lg cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start gap-2 mb-2">
+                        <div className={`w-8 h-8 rounded-none flex items-center justify-center flex-shrink-0 ${
+                          result.type === 'grammar' ? 'bg-blue-50 dark:bg-blue-900/20' :
+                          result.type === 'plagiarism' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+                          'bg-purple-50 dark:bg-purple-900/20'
+                        }`}>
+                          {result.type === 'grammar' && <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                          {result.type === 'plagiarism' && <BarChart3 className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />}
+                          {result.type === 'logicMap' && <GitBranch className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 leading-tight mb-1">
+                            {result.type === 'grammar' && 'Grammar Check'}
+                            {result.type === 'plagiarism' && 'Plagiarism Check'}
+                            {result.type === 'logicMap' && 'Logic Map'}
+                          </h4>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {new Date(result.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                        {result.type === 'grammar' && (
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                            {(result.data as any).issues?.length || 0} issue{(result.data as any).issues?.length !== 1 ? 's' : ''} found
+                          </p>
+                        )}
+                        {result.type === 'plagiarism' && (
+                          <p className={`text-xs font-semibold ${
+                            (result.data as any).isOriginal ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'
+                          }`}>
+                            {(result.data as any).similarityScore}% similarity
+                          </p>
+                        )}
+                        {result.type === 'logicMap' && (
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                            {(result.data as any).graphData?.nodes?.length || 0} nodes analyzed
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
