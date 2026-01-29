@@ -25,6 +25,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem('token');
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'; // Hard redirect needed here
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   register: (data: { email: string; password: string; name?: string }) =>
     api.post('/auth/register', data),

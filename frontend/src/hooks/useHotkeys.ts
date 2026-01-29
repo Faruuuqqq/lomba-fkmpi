@@ -12,7 +12,7 @@ export function useHotkeys(keyCombo: KeyCombo, callback: Callback, deps: any[] =
 
     useEffect(() => {
         callbackRef.current = callback;
-    });
+    }, [callback]);
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {

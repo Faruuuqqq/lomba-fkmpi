@@ -118,7 +118,7 @@ export interface LogicMapResult {
   analysis: string;
   graphData: {
     nodes: LogicMapNode[];
-    edges?: any[];
+    edges?: LogicMapEdge[];
   };
   timestamp: string;
 }
@@ -130,4 +130,32 @@ export interface ToolResult {
   type: ToolResultType;
   data: GrammarResult | PlagiarismResult | LogicMapResult;
   timestamp: string;
+}
+
+export interface ApiError extends Error {
+  response?: {
+    data?: {
+      message?: string;
+    };
+    status?: number;
+  };
+}
+
+export interface LibraryPaper {
+  id: string;
+  title: string;
+  authors: string;
+  year: number;
+  abstract?: string;
+  keywords?: string[];
+  url?: string;
+  addedAt: string;
+}
+
+export interface LogicMapEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+  hasFallacy: boolean;
 }

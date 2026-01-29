@@ -15,6 +15,7 @@ interface Project {
 
 export function ProjectSidebar() {
     const router = useRouter();
+    const { logout } = useAuth();
     const [projects, setProjects] = useState<Project[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -222,7 +223,10 @@ export function ProjectSidebar() {
                                 Home
                             </button>
                             <button
-                                onClick={() => router.push('/login')}
+                                onClick={() => {
+                                    logout();
+                                    router.push('/login');
+                                }}
                                 className="flex-1 p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5 text-xs font-medium"
                                 title="Logout"
                             >
@@ -241,7 +245,10 @@ export function ProjectSidebar() {
                             <Home className="w-5 h-5" />
                         </button>
                         <button
-                            onClick={() => router.push('/login')}
+                            onClick={() => {
+                                logout();
+                                router.push('/login');
+                            }}
                             className="w-10 h-10 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors flex items-center justify-center"
                             title="Logout"
                         >

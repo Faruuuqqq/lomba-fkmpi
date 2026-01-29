@@ -56,7 +56,7 @@ export class AIChatController {
   @Get('history')
   @ApiOperation({ summary: 'Get AI chat history' })
   @ApiResponse({ status: 200, description: 'Chat history retrieved' })
-  async getHistory(@CurrentUser() user: any, @Get('projectId') projectId?: string) {
-    return this.aiChatService.getChatHistory(user.id, projectId);
+  async getHistory(@CurrentUser() user: any) {
+    return this.aiChatService.getChatHistory(user.id);
   }
 }

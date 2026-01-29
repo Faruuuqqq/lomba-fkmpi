@@ -74,29 +74,13 @@ export class AIChatService {
   }
 
   async applyEdit(userId: string, dto: ApplyEditDto) {
-    // Dalam implementasi sederhana, apply langsung ke project
-    if (dto.projectId) {
-      const project = await this.prisma.project.findUnique({
-        where: { id: dto.projectId },
-      });
-
-      if (!project || project.userId !== userId) {
-        throw new NotFoundException('Project not found');
-      }
-
-      // Untuk sekarang, log saja dulu
-      this.logger.log(`User ${userId} applied edit ${dto.suggestionId}: ${dto.action}`);
-      
-      return {
-        success: dto.action === 'accept',
-        message: dto.action === 'accept' ? 'Edit applied successfully' : 'Edit rejected',
-        editId: dto.suggestionId,
-      };
-    }
+    // Untuk sekarang, log saja dulu karena DTO ApplyEditDto tidak punya projectId
+    this.logger.log(`User ${userId} applied edit ${dto.suggestionId}: ${dto.action}`);
 
     return {
-      success: false,
-      message: 'No project specified',
+      success: dto.action === 'accept',
+      message: dto.action === 'accept' ? 'Edit applied successfully' : 'Edit rejected',
+      editId: dto.suggestionId,
     };
   }
 
@@ -123,9 +107,9 @@ export class AIChatService {
             {
               model: 'llama-3.3-70b-versatile',
               messages: [
-                { 
-                  role: 'system', 
-                  content: `You are a helpful AI assistant for academic writing. ${context}Be conversational and helpful.` 
+                {
+                  role: 'system',
+                  content: `You are a helpful AI assistant for academic writing. ${context}Be conversational and helpful.`
                 },
                 { role: 'user', content: dto.message },
               ],
@@ -159,7 +143,7 @@ export class AIChatService {
           response: aiResponse,
           mode: dto.mode,
           context: context ? 'active' : 'none',
-          canApplyToEditor: !!dto.projectId, // Bisa apply ke editor jika ada project
+          canApplyToEditor: !!dto.projectId,
         };
       }
     } catch (error) {

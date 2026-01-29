@@ -17,20 +17,20 @@ export default function SnapshotsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [snapshots, setSnapshots] = useState<ProjectSnapshot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
       return;
     }
 
-    if (id) {
+    if (id && isAuthenticated) {
       fetchProjectAndSnapshots(id as string);
     }
-  }, [id, isAuthenticated, router]);
+  }, [id, isAuthenticated, isLoading, router]);
 
   const fetchProjectAndSnapshots = async (projectId: string) => {
     try {

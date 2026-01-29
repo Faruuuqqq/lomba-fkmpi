@@ -8,12 +8,13 @@ import { AiInteraction } from '@/types';
 import { aiAPI } from '@/lib/api';
 import { Send, Bot, User, Sparkles, ArrowLeft, Copy, Trash2, RefreshCw, Coins, MessageSquare, Brain, Lightbulb, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ApiError } from '@/types';
 
 type ChatMode = 'socratic' | 'research' | 'critical';
 
 export default function AiChatPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { stats, addTokens, setShowDailyChallenge } = useGamification();
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,11 +25,11 @@ export default function AiChatPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
       return;
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,12 +87,16 @@ export default function AiChatPage() {
 
       setChatHistory(prev => [...prev.slice(0, -1), aiResponse]);
       toast.success('✓ Response complete');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Chat error:', error);
       addTokens(5); // Refund on error
 
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to analyze';
-      setError(errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze';
+      if ((error as ApiError).response?.data?.message) {
+        setError((error as ApiError).response!.data!.message!);
+      } else {
+        setError(errorMessage);
+      }
 
       // Remove the temporary user message
       setChatHistory(prev => prev.filter(msg => !msg.id.includes('_user')));

@@ -13,10 +13,10 @@ export default function ProjectsPage() {
     const { isAuthenticated } = useAuth();
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!isLoading && !isAuthenticated) {
             router.push('/login');
         }
-    }, [isAuthenticated, router]);
+    }, [isAuthenticated, isLoading, router]);
 
     return (
         <div className="flex h-screen bg-zinc-100 dark:bg-zinc-900 overflow-hidden">

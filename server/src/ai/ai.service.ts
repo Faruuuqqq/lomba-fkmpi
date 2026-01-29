@@ -65,7 +65,7 @@ export class AiService {
       throw new Error('AI is locked. Write at least 150 words to unlock AI assistance.');
     }
 
-    const systemPrompt = `You are MITRA, a Socratic Tutor for academic writing. Your goal is to sharpen the student's logic.
+    const systemPrompt = `You are MITRA, a Socratic Tutor for academic writing. Your goal is to sharpen student's logic.
 
 Rules:
 1. DO NOT write the essay for them.
@@ -110,15 +110,16 @@ Rules:
         );
         aiResponse = groqResponse.data.choices?.[0]?.message?.content;
         if (aiResponse && aiResponse.trim()) {
-        this.logger.log('✅ Groq API successful - Primary');
-       } catch (e: any) {
+          this.logger.log('✅ Groq API successful - Primary');
+        }
+      } catch (e: any) {
         this.logger.error('Groq API call failed:', {
           message: e.message,
           status: e.response?.status,
           data: e.response?.data,
           config: e.config
         });
-        
+
         if (e.response?.data?.error?.code === 'invalid_api_key') {
           this.logger.error('❌ Groq API Key invalid. Get your free key at: https://console.groq.com/keys');
         } else if (e.response?.status === 429) {
@@ -144,7 +145,8 @@ Rules:
         );
         aiResponse = geminiResponse.data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (aiResponse && aiResponse.trim()) {
-        this.logger.log('✅ Gemini API successful - Secondary');
+          this.logger.log('✅ Gemini API successful - Secondary');
+        }
       } catch (e: any) {
         this.logger.error('❌ Gemini failed, trying ZAI...', e.response?.data?.error?.message || e.message);
       }
@@ -178,85 +180,8 @@ Rules:
         if (aiResponse && aiResponse.trim()) {
           this.logger.log('✅ ZAI API successful - Tertiary');
         }
-      } catch (e: any) {
-        console.error('❌ ZAI failed, using fallback...', e.response?.data?.error || e.message);
-      }
-    }
       } catch (e) {
-        this.logger.error('Gemini failed, trying ZAI...', e.response?.data?.error?.message || e.message);
-      }
-    }
-
-    // FINAL FALLBACK: Smart Socratic Mock
-    if (!aiResponse) {
-      this.logger.warn('API failure or insufficient balance. Triggering Socratic Lite Mode.');
-      aiResponse = this.getSmartSocraticResponse(dto.userQuery, dto.currentText);
-    }
-      try {
-        const groqResponse = await firstValueFrom(
-          this.httpService.post(
-            'https://api.groq.com/openai/v1/chat/completions',
-            {
-              model: 'llama-3.3-70b-versatile',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
-              ],
-              max_tokens: 200,
-              temperature: 0.7,
-            },
-            {
-              headers: {
-                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              timeout: 15000,
-            }
-          )
-        );
-        aiResponse = groqResponse.data.choices?.[0]?.message?.content;
-        if (aiResponse && aiResponse.trim()) {
-          console.log('✅ Groq API successful');
-        }
-      } catch (e: any) {
-        if (e.response?.data?.error?.code === 'invalid_api_key') {
-          console.error('❌ Groq API Key invalid. Get your free key at: https://console.groq.com/keys');
-        } else {
-          console.error('❌ Groq failed:', e.response?.data || e.message);
-        }
-      }
-    }
-
-    // Try ZAI tertiary
-    if (!aiResponse && zaiKey) {
-      try {
-        const zAiResponse = await firstValueFrom(
-          this.httpService.post(
-            'https://api.z.ai/api/paas/v4/chat/completions',
-            {
-              model: 'glm-4-plus',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
-              ],
-              max_tokens: 200,
-              temperature: 0.7,
-            },
-            {
-              headers: {
-                'Authorization': `Bearer ${zaiKey}`,
-                'Content-Type': 'application/json',
-              },
-              timeout: 15000,
-            }
-          )
-        );
-        aiResponse = zAiResponse.data.choices?.[0]?.message?.content;
-        if (aiResponse && aiResponse.trim()) {
-          console.log('ZAI API successful');
-        }
-      } catch (e) {
-          this.logger.error('ZAI failed...', e.response?.data || e.message);
+        this.logger.error('❌ ZAI failed, using fallback...', e.response?.data?.error || e.message);
       }
     }
 
@@ -276,7 +201,7 @@ Rules:
       });
     } catch (dbError) {
       this.logger.error('Failed to save AI interaction:', dbError);
-      // Continue without failing the main functionality
+      // Continue without failing main functionality
     }
 
     // Mask API keys in logs for security
@@ -309,7 +234,7 @@ Rules:
     const defaults = [
       "Itu pertanyaan yang bagus. Jika Anda memposisikan diri sebagai lawan bicara, apa asumsi tersembunyi yang mungkin mereka temukan dalam paragraf ini?",
       "Mari kita bedah lebih dalam. Bagaimana jika konteks situasi ini diubah 180 derajat, apakah prinsip yang Anda pegang di sini masih relevan?",
-      "Coba perhatikan kaitan antara dua poin terakhir Anda. Apakah hubungannya sudah cukup kuat, atau ada langkah logika yang terlewat?"
+      "Coba perhatikan kaitan antara dua poin terakhir Anda. Apakah hubungannya sudah cukup kuat, atau ada langkah logika yang terlewat?",
     ];
     return defaults[Math.floor(Math.random() * defaults.length)];
   }
@@ -348,7 +273,7 @@ Rules:
       throw new ForbiddenException('You do not have access to this project');
     }
 
-    const systemPrompt = `Analyze the user's argument structure. Identify Premises, Evidence, and Conclusions. Output a JSON object representing a graph node-edge structure where nodes are statements and edges are logical connections (e.g., 'supports', 'contradicts'). Also identify any logical fallacies.
+    const systemPrompt = `Analyze user's argument structure. Identify Premises, Evidence, and Conclusions. Output a JSON object representing a graph node-edge structure where nodes are statements and edges are logical connections (e.g., 'supports', 'contradicts'). Also identify any logical fallacies.
 
 Return ONLY valid JSON in this exact format:
 {
@@ -361,7 +286,7 @@ Return ONLY valid JSON in this exact format:
     { "id": "e1", "source": "1", "target": "3", "label": "supports", "hasFallacy": false },
     { "id": "e2", "source": "2", "target": "3", "label": "supports", "hasFallacy": false }
   ],
-  "analysis": "Brief explanation of the logical structure and any fallacies found."
+  "analysis": "Brief explanation of logical structure and any fallacies found."
 }`;
 
     const userPrompt = `Essay content:\n\n${dto.text}`;
@@ -482,7 +407,7 @@ Return ONLY valid JSON in this exact format:
       throw new ForbiddenException('You do not have access to this project');
     }
 
-    const systemPrompt = `Scan the text for algorithmic bias, stereotypes, or generalized assumptions lacking evidence. Highlight specific sentences and explain *why* they might be ethically problematic. Do not rewrite them.
+    const systemPrompt = `Scan text for algorithmic bias, stereotypes, or generalized assumptions lacking evidence. Highlight specific sentences and explain *why* they might be ethically problematic. Do not rewrite them.
 
 Return ONLY valid JSON in this exact format:
 {
@@ -493,7 +418,7 @@ Return ONLY valid JSON in this exact format:
       "explanation": "Why this is ethically problematic"
     }
   ],
-  "summary": "Overall assessment of ethical considerations in the text."
+  "summary": "Overall assessment of ethical considerations in text."
 }`;
 
     const userPrompt = `Essay content:\n\n${dto.text}`;

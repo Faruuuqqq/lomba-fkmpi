@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -14,14 +14,20 @@ interface ToastProps {
 
 export function Toast({ message, type = 'info', duration = 5000, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
+  const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Wait for animation
+      animationTimerRef.current = setTimeout(onClose, 300); // Wait for animation
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (animationTimerRef.current) {
+        clearTimeout(animationTimerRef.current);
+      }
+    };
   }, [duration, onClose]);
 
   const handleClose = () => {

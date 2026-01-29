@@ -31,10 +31,110 @@ export default function FileUpload({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { token } = useAuth();
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    
+    if (files.length === 0) return;
+
+    await processFiles(files);
+  };
+
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    if (uploadedFiles.length + files.length > maxFiles) {
+      setError(`Maximum ${maxFiles} files allowed`);
+      return;
+    }
+
+    for (const file of files) {
+      if (!acceptedTypes.includes(file.type)) {
+        setError(`File type ${file.type} is not allowed`);
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`File ${file.name} exceeds 10MB limit`);
+        return;
+      }
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        if (projectId) {
+          formData.append('projectId', projectId);
+        }
+
+        const response = await fetch('/api/media/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Upload failed');
+        }
+
+        const result = await response.json();
+        
+        setUploadedFiles(prev => [...prev, result]);
+        setUploadProgress((uploadedFiles.length + 1) / files.length * 100);
+        
+        if (onUploadComplete) {
+          onUploadComplete(result);
+        }
+      }
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    await processFiles(files);
+  };
     const files = Array.from(event.target.files || []);
     
     if (files.length === 0) return;
@@ -135,7 +235,17 @@ export default function FileUpload({
   return (
     <div className="w-full max-w-2xl mx-auto p-4">
       {/* Upload Area */}
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors">
+      <div
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${
+          isDragging
+            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
+            : 'border-gray-300 hover:border-indigo-500'
+        }`}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -155,7 +265,7 @@ export default function FileUpload({
             <span className="h-12 w-12 text-gray-400 mb-3">☁️</span>
           </div>
           <span className="text-lg font-medium text-gray-700 mb-1">
-            {uploading ? 'Uploading...' : 'Drop files here or click to browse'}
+            {uploading ? 'Uploading...' : isDragging ? 'Release to drop files' : 'Drop files here or click to browse'}
           </span>
           <span className="text-sm text-gray-500">
             Maximum {maxFiles} files, up to 10MB each

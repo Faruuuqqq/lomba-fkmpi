@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Circle, Square, ArrowRight, Sparkles } from 'lucide-react';
+import { ApiError } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,8 +38,9 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.push('/projects');
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Invalid email or password');
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      setError(apiError.response?.data?.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }

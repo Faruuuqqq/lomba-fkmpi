@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { gamificationAPI } from '@/lib/api';
 
 interface GamificationStats {
@@ -28,6 +28,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     const [stats, setStats] = useState<GamificationStats>({ tokens: 0, streak: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [showDailyChallenge, setShowDailyChallenge] = useState(false);
+    const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const refreshStats = async () => {
         try {
@@ -51,8 +52,17 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
             tokens: prev.tokens + amount
         }));
         // Refresh from server to confirm
-        setTimeout(refreshStats, 500);
+        refreshTimeoutRef.current = setTimeout(refreshStats, 500);
     };
+
+    useEffect(() => {
+        return () => {
+            // Cleanup pending timeout on unmount
+            if (refreshTimeoutRef.current) {
+                clearTimeout(refreshTimeoutRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         refreshStats();

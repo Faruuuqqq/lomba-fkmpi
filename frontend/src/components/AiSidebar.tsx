@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, BookOpen, Wrench, Copy, ArrowDownToLine, Coins, Brain, AlertCircle, CheckCircle2, RefreshCw, Trash2, Quote, Clock, FileText, GitBranch, BarChart3 } from 'lucide-react';
-import { AiInteraction, ToolResult } from '@/types';
+import { useRouter } from 'next/navigation';
+import { Send, Bot, User, Sparkles, BookOpen, Wrench, Copy, ArrowDownToLine, Coins, Brain, AlertCircle, CheckCircle2, RefreshCw, Trash2, Quote, Clock, FileText, GitBranch, BarChart3, GraduationCap, MessageSquare, LucideIcon } from 'lucide-react';
+import { AiInteraction, ToolResult, GrammarResult, PlagiarismResult, LogicMapResult, ApiError, LibraryPaper } from '@/types';
 import { aiAPI, libraryAPI } from '@/lib/api';
 import { Modal } from './Modal';
 import toast from 'react-hot-toast';
 import { useGamification } from '@/contexts/GamificationContext';
 import { useHotkeys } from '@/hooks/useHotkeys';
+import { CitationFormatChecker } from './CitationFormatChecker';
+import { OutlineGenerator } from './OutlineGenerator';
 
 interface AiSidebarProps {
   projectId: string;
@@ -17,10 +20,12 @@ interface AiSidebarProps {
   chatHistory: AiInteraction[];
   onNewChat: (interaction: AiInteraction) => void;
   currentContent: string;
-  editorInstance?: any;
+  editorInstance?: any; // Keeping any for TipTap editor instance
 }
 
 type TabType = 'chat' | 'citations' | 'tools' | 'results';
+
+type ToneStyle = 'socratic' | 'academic' | 'formal' | 'casual';
 
 export function AiSidebar({
   projectId,
@@ -32,6 +37,7 @@ export function AiSidebar({
   currentContent,
   editorInstance,
 }: AiSidebarProps) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('chat');
@@ -39,20 +45,30 @@ export function AiSidebar({
   const [error, setError] = useState<string | null>(null);
 
   // Library State
-  const [savedPapers, setSavedPapers] = useState<any[]>([]);
+  const [savedPapers, setSavedPapers] = useState<LibraryPaper[]>([]);
   const [isLoadingPapers, setIsLoadingPapers] = useState(false);
 
   // Tools modals
   const [showGrammarModal, setShowGrammarModal] = useState(false);
   const [showPlagiarismModal, setShowPlagiarismModal] = useState(false);
   const [showLogicMapModal, setShowLogicMapModal] = useState(false);
-  const [grammarResult, setGrammarResult] = useState<any>(null);
-  const [plagiarismResult, setPlagiarismResult] = useState<any>(null);
-  const [logicMapResult, setLogicMapResult] = useState<any>(null);
+  const [showCitationChecker, setShowCitationChecker] = useState(false);
+  const [showOutlineGenerator, setShowOutlineGenerator] = useState(false);
+  const [grammarResult, setGrammarResult] = useState<GrammarResult | null>(null);
+  const [plagiarismResult, setPlagiarismResult] = useState<PlagiarismResult | null>(null);
+  const [logicMapResult, setLogicMapResult] = useState<LogicMapResult | null>(null);
   const [isCheckingGrammar, setIsCheckingGrammar] = useState(false);
   const [isCheckingPlagiarism, setIsCheckingPlagiarism] = useState(false);
   const [isGeneratingMap, setIsGeneratingMap] = useState(false);
   const [toolResults, setToolResults] = useState<ToolResult[]>([]);
+  const [selectedTone, setSelectedTone] = useState<ToneStyle>('socratic');
+
+  const toneOptions: { value: ToneStyle; label: string; description: string; icon: LucideIcon }[] = [
+    { value: 'socratic', label: 'Socratic', description: 'Asks questions to guide thinking', icon: Brain },
+    { value: 'academic', label: 'Academic', description: 'Scholarly tone with citations', icon: BookOpen },
+    { value: 'formal', label: 'Formal', description: 'Professional and direct', icon: FileText },
+    { value: 'casual', label: 'Conversational', description: 'Friendly and accessible', icon: MessageSquare },
+  ];
 
   const { stats, setShowDailyChallenge, addTokens } = useGamification();
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -96,7 +112,25 @@ export function AiSidebar({
 
     try {
       addTokens(-5);
-      const { data } = await aiAPI.analyze(projectId, '', userQuery);
+
+      // Add tone/style prefix based on selection
+      let prompt = userQuery;
+      switch (selectedTone) {
+        case 'socratic':
+          prompt = `[SOCRATIC MODE - Ask questions back, don't give direct answers] ${userQuery}`;
+          break;
+        case 'academic':
+          prompt = `[ACADEMIC MODE - Use scholarly tone, mention possible sources, be precise] ${userQuery}`;
+          break;
+        case 'formal':
+          prompt = `[FORMAL MODE - Professional tone, direct and clear] ${userQuery}`;
+          break;
+        case 'casual':
+          prompt = `[CONVERSATIONAL MODE - Friendly, accessible language] ${userQuery}`;
+          break;
+      }
+
+      const { data } = await aiAPI.analyze(projectId, '', prompt);
       const newInteraction: AiInteraction = {
         id: Date.now().toString(),
         userPrompt: userQuery,
@@ -106,11 +140,12 @@ export function AiSidebar({
       };
       onNewChat(newInteraction);
       toast.success('✓ Analysis complete');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Chat error:', error);
       addTokens(5); // Refund on error
 
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to analyze';
+      const apiError = error as ApiError;
+      const errorMessage = apiError.response?.data?.message || (error instanceof Error ? error.message : 'Failed to analyze');
       setError(errorMessage);
 
       // Retry mechanism
@@ -168,10 +203,11 @@ export function AiSidebar({
       };
       setToolResults(prev => [newResult, ...prev]);
       toast.success('✓ Grammar check complete');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Grammar check error:', error);
       addTokens(10); // Refund
-      toast.error(error.response?.data?.message || 'Grammar check failed. Try again.');
+      const apiError = error as ApiError;
+      toast.error(apiError.response?.data?.message || 'Grammar check failed. Try again.');
       setShowGrammarModal(false);
     } finally {
       setIsCheckingGrammar(false);
@@ -206,10 +242,11 @@ export function AiSidebar({
       };
       setToolResults(prev => [newResult, ...prev]);
       toast.success('✓ Plagiarism check complete');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Plagiarism check error:', error);
       addTokens(10); // Refund
-      toast.error(error.response?.data?.message || 'Plagiarism check failed. Try again.');
+      const apiError = error as ApiError;
+      toast.error(apiError.response?.data?.message || 'Plagiarism check failed. Try again.');
       setShowPlagiarismModal(false);
     } finally {
       setIsCheckingPlagiarism(false);
@@ -246,12 +283,13 @@ export function AiSidebar({
       };
       setToolResults(prev => [newResult, ...prev]);
       toast.success('✓ Logic map generated');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Logic map error:', error);
       addTokens(15); // Refund
-      toast.error(error.response?.data?.message || 'Logic map generation failed. Try again.');
+      const apiError = error as ApiError;
+      toast.error(apiError.response?.data?.message || 'Logic map generation failed. Try again.');
       // Keep modal open but show error state? 
-      // setShowLogicMapModal(false); // Let user see the error in the modal if we add logic for it
+      // setShowLogicMapModal(false); // Let user see the error in modal if we add logic for it
     } finally {
       setIsGeneratingMap(false);
     }
@@ -273,6 +311,10 @@ export function AiSidebar({
 
     editorInstance.chain().focus().insertContent(`\n\n${text}\n\n`).run();
     toast.success('✓ Inserted to editor');
+  };
+
+  const handleInsertOutline = (outline: string) => {
+    insertToEditor(outline);
   };
 
   useHotkeys('ctrl+enter', () => {
@@ -344,6 +386,31 @@ export function AiSidebar({
           {/* Chat Tab */}
           {activeTab === 'chat' && (
             <>
+              {/* Tone/Style Selector */}
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                <p className="text-xs font-bold uppercase text-zinc-500 mb-2">Response Style</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {toneOptions.map((option) => {
+                    const Icon = option.icon;
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => setSelectedTone(option.value)}
+                        className={`flex items-center gap-1.5 p-2 rounded text-xs font-medium transition-all ${
+                          selectedTone === option.value
+                            ? 'bg-indigo-600 text-white shadow-md'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                        }`}
+                        title={option.description}
+                      >
+                        <Icon className="w-3 h-3" />
+                        <span>{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {error && (
                   <div className="p-3 bg-red-50 dark:bg-red-900/20 border-4 border-bauhaus-red dark:border-red-800 rounded-none flex items-start gap-2">
@@ -503,7 +570,7 @@ export function AiSidebar({
                     Visit the Research Library to save papers
                   </p>
                   <button
-                    onClick={() => window.location.href = '/library'}
+                    onClick={() => router.push('/library')}
                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-none font-semibold text-xs transition-colors shadow-bauhaus-lg-bauhaus"
                   >
                     Go to Library
@@ -513,12 +580,12 @@ export function AiSidebar({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-2 px-1">
                     <h3 className="text-xs font-bold uppercase text-zinc-500">Saved Papers ({savedPapers.length})</h3>
-                    <button
-                      onClick={() => window.location.href = '/library'}
-                      className="text-xs text-indigo-600 font-semibold hover:underline"
-                    >
-                      + Add More
-                    </button>
+                      <button
+                        onClick={() => router.push('/library')}
+                        className="text-xs text-indigo-600 font-semibold hover:underline"
+                      >
+                        + Add More
+                      </button>
                   </div>
                   {savedPapers.map((paper) => (
                     <div key={paper.id} className="bg-white dark:bg-zinc-800 border-4 border-bauhaus dark:border-zinc-700 rounded-none p-3 shadow-bauhaus-lg-bauhaus hover:shadow-bauhaus-lg transition-shadow-bauhaus-lg group">
@@ -600,6 +667,34 @@ export function AiSidebar({
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400">
                     Visualize argument structure
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setShowCitationChecker(true)}
+                  disabled={!currentContent}
+                  className="w-full p-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border-4 border-bauhaus dark:border-zinc-700 rounded-none text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm">Citation Checker</span>
+                    <span className="text-xs text-zinc-500">Free</span>
+                  </div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Check APA, MLA, Chicago format
+                  </p>
+                </button>
+
+                <button
+                  onClick={() => setShowOutlineGenerator(true)}
+                  disabled={!currentContent}
+                  className="w-full p-4 bg-indigo-50 dark:bg-indigo-900/20 border-4 border-bauhaus-indigo dark:border-indigo-700 rounded-none text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm">Outline Generator</span>
+                    <span className="text-xs text-zinc-500">20 tokens</span>
+                  </div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Generate structured essay outline
                   </p>
                 </button>
               </div>
@@ -695,6 +790,21 @@ export function AiSidebar({
           )}
         </div>
       </aside>
+
+      {/* Citation Format Checker Modal */}
+      <CitationFormatChecker
+        isOpen={showCitationChecker}
+        onClose={() => setShowCitationChecker(false)}
+        content={currentContent}
+      />
+
+      {/* Outline Generator Modal */}
+      <OutlineGenerator
+        isOpen={showOutlineGenerator}
+        onClose={() => setShowOutlineGenerator(false)}
+        topic={currentContent}
+        onInsertOutline={handleInsertOutline}
+      />
 
       {/* Grammar Check Modal */}
       <Modal

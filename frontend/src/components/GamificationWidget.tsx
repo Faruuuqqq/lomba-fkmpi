@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Coins, Flame, Target, Check, RefreshCw, X } from 'lucide-react';
 import { useGamification } from '@/contexts/GamificationContext';
 import { Modal } from './Modal';
 import toast from 'react-hot-toast';
 
 export function GamificationWidget() {
+    const router = useRouter();
     const { stats, isLoading, showDailyChallenge, setShowDailyChallenge, addTokens } = useGamification();
     const [isExpanded, setIsExpanded] = useState(false);
     const [answer, setAnswer] = useState('');
@@ -126,7 +128,7 @@ export function GamificationWidget() {
 
                                 {/* View Full Progress Button */}
                                 <button
-                                    onClick={() => window.location.href = '/gamification'}
+                                    onClick={() => router.push('/gamification')}
                                     className="w-full p-4 bg-bauhaus-red hover:bg-bauhaus-red/90 text-white rounded-none font-black uppercase text-sm border-4 border-bauhaus shadow-bauhaus btn-press transition-colors"
                                 >
                                     View Full Progress →
@@ -172,15 +174,36 @@ export function GamificationWidget() {
                                 className="w-full p-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                             <button
-                                onClick={() => {
+                                onClick={async () => {
                                     setIsSubmitting(true);
-                                    setTimeout(() => {
-                                        addTokens(50);
-                                        setShowDailyChallenge(false);
-                                        setAnswer('');
+                                    try {
+                                        if (!stats.dailyChallenge?.id) {
+                                            toast.error('Challenge not available');
+                                            setIsSubmitting(false);
+                                            return;
+                                        }
+
+                                        const answerNum = parseInt(answer);
+                                        if (isNaN(answerNum)) {
+                                            toast.error('Please enter a valid number');
+                                            setIsSubmitting(false);
+                                            return;
+                                        }
+
+                                        const { data } = await gamificationAPI.submitChallenge(stats.dailyChallenge.id, answerNum);
+                                        
+                                        if (data.isCorrect) {
+                                            addTokens(50);
+                                            setShowDailyChallenge(false);
+                                            toast.success('🎉 +50 Tokens! Excellent work.');
+                                        } else {
+                                            toast.error('Incorrect answer. Try again!');
+                                        }
+                                    } catch (error) {
+                                        toast.error('Failed to submit answer. Try again.');
+                                    } finally {
                                         setIsSubmitting(false);
-                                        toast.success('🎉 +50 Tokens! Excellent work.');
-                                    }, 1000);
+                                    }
                                 }}
                                 disabled={!answer || isSubmitting}
                                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold uppercase py-3 disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2"

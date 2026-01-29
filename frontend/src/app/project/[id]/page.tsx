@@ -6,9 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Editor } from '@/components/Editor';
 import { AiSidebar } from '@/components/AiSidebar';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
+import { KeyboardShortcutsModal } from '@/components/KeyboardShortcutsModal';
+import { CompetitionSubmissionModal } from '@/components/CompetitionSubmissionModal';
 import { projectsAPI, aiAPI } from '@/lib/api';
 import { Project, AiInteraction } from '@/types';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, HelpCircle, FileText, Target, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import confetti from 'canvas-confetti';
 import { useHotkeys } from '@/hooks/useHotkeys';
@@ -26,14 +28,20 @@ export default function ProjectPage() {
   const [showProjectSidebar, setShowProjectSidebar] = useState(true);
   const [showAiSidebar, setShowAiSidebar] = useState(true);
   const [wasAiLocked, setWasAiLocked] = useState(true);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showSubmissionChecklist, setShowSubmissionChecklist] = useState(false);
+  const [plagiarismChecked, setPlagiarismChecked] = useState(false);
+  const [plagiarismScore, setPlagiarismScore] = useState<number | undefined>();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
       return;
     }
-    loadProject();
-  }, [id, isAuthenticated, router]);
+    if (isAuthenticated) {
+      loadProject();
+    }
+  }, [id, isAuthenticated, isLoading, router]);
 
   const loadProject = async () => {
     try {
@@ -97,6 +105,14 @@ export default function ProjectPage() {
     handleSave();
   });
 
+  useHotkeys('ctrl+/', () => {
+    setShowShortcuts(true);
+  });
+
+  useHotkeys('ctrl+shift+s', () => {
+    setShowSubmissionChecklist(true);
+  });
+
   const handleNewChat = (interaction: AiInteraction) => {
     setChatHistory([...chatHistory, interaction]);
   };
@@ -127,7 +143,7 @@ export default function ProjectPage() {
 
       {/* CENTER: Editor */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Toggle Sidebar Buttons */}
+        {/* Toggle Sidebar Buttons & Actions */}
         <div className="absolute top-4 left-4 z-10 flex gap-2">
           {!showProjectSidebar && (
             <button
@@ -140,6 +156,24 @@ export default function ProjectPage() {
           )}
         </div>
 
+        {/* Editor Actions */}
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={() => setShowShortcuts(true)}
+            className="p-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+            title="Keyboard Shortcuts (Ctrl + /)"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setShowSubmissionChecklist(true)}
+            className="p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg shadow-sm hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+            title="Submission Checklist"
+          >
+            <Target className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </button>
+        </div>
+
         {/* Editor */}
         <Editor
           content={content}
@@ -147,6 +181,8 @@ export default function ProjectPage() {
           isLocked={!isAiUnlocked}
           isSaving={isSaving}
           lastSaved={project?.updatedAt ? new Date(project.updatedAt) : undefined}
+          minWords={1000}
+          maxWords={5000}
         />
       </main>
 
@@ -173,6 +209,19 @@ export default function ProjectPage() {
           <ChevronLeft className="w-5 h-5" />
         </button>
       )}
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+
+      {/* Competition Submission Modal */}
+      <CompetitionSubmissionModal
+        isOpen={showSubmissionChecklist}
+        onClose={() => setShowSubmissionChecklist(false)}
+        content={content}
+        wordCount={wordCount}
+        isPlagiarismChecked={plagiarismChecked}
+        plagiarismScore={plagiarismScore}
+      />
     </div>
   );
 }

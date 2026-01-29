@@ -27,7 +27,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/library');
+      router.push('/projects');
       return;
     }
     setIsLoading(false);

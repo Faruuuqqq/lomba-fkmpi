@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Circle, Square, ArrowRight, Check } from 'lucide-react';
+import { ApiError } from '@/types';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -48,8 +49,9 @@ export default function RegisterPage() {
       setIsLoading(true);
       await register(email, password, name || undefined);
       router.push('/library');
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to create account');
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      setError(apiError.response?.data?.message || 'Failed to create account');
     } finally {
       setIsLoading(false);
     }

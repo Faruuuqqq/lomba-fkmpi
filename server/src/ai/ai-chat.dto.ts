@@ -99,18 +99,19 @@ export class ContextualChatDto {
 
 export class UserDetectionDto {
   @ApiProperty({
-    description: 'Current user text being typed',
-  })
-  @IsString()
-  @IsNotEmpty()
-  currentText: string;
-
-  @ApiProperty({
     description: 'Project ID for context',
   })
   @IsString()
   @IsOptional()
   projectId?: string;
+
+  @ApiProperty({
+    description: 'Current user text being typed',
+    maxLength: 10000,
+  })
+  @IsString()
+  @IsNotEmpty()
+  currentText: string;
 
   @ApiProperty({
     description: 'Typing pattern to analyze',
