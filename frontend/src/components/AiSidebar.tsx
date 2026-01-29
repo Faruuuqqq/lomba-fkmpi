@@ -595,7 +595,7 @@ export function AiSidebar({
                             {paper.title}
                           </h4>
                           <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                            {paper.authors.join(', ')} • {paper.year}
+                            {Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors} • {paper.year}
                           </p>
                         </div>
                       </div>
@@ -730,13 +730,13 @@ export function AiSidebar({
                       key={result.id}
                       onClick={() => {
                         if (result.type === 'grammar') {
-                          setGrammarResult(result.data);
+                          setGrammarResult(result.data as GrammarResult);
                           setShowGrammarModal(true);
                         } else if (result.type === 'plagiarism') {
-                          setPlagiarismResult(result.data);
+                          setPlagiarismResult(result.data as PlagiarismResult);
                           setShowPlagiarismModal(true);
                         } else if (result.type === 'logicMap') {
-                          setLogicMapResult(result.data);
+                          setLogicMapResult(result.data as LogicMapResult);
                           setShowLogicMapModal(true);
                         }
                       }}

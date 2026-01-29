@@ -24,7 +24,7 @@ interface WritingStats {
   longestSession: number; // in minutes
 }
 
-export function WritingAnalytics() {
+export default function WritingAnalytics() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<WritingStats | null>(null);

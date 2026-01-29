@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { projectsAPI } from '@/lib/api';
-import { ProjectSnapshot } from '@/types';
+import { Project, ProjectSnapshot } from '@/types';
 import { ArrowLeft, History, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 

@@ -17,7 +17,7 @@ export default function AiChatPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const { stats, addTokens, setShowDailyChallenge } = useGamification();
   const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<AiInteraction[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export default function AiChatPage() {
 
     const userQuery = query.trim();
     setQuery('');
-    setIsLoading(true);
+    setIsChatLoading(true);
     setError(null);
 
     try {
@@ -112,7 +112,7 @@ export default function AiChatPage() {
         toast.error(`${errorMessage}. Please try again later.`);
       }
     } finally {
-      setIsLoading(false);
+      setIsChatLoading(false);
     }
   };
 
@@ -344,7 +344,7 @@ export default function AiChatPage() {
             ))
           )}
 
-          {isLoading && (
+          {isChatLoading && (
             <div className="flex gap-3">
               <div className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center">
                 <Bot className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
@@ -372,7 +372,7 @@ export default function AiChatPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your question or paste your text..."
-                disabled={isLoading}
+                disabled={isChatLoading}
                 className="w-full p-4 pr-16 bg-zinc-50 dark:bg-zinc-900 border-4 border-bauhaus dark:border-zinc-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-sm min-h-[60px] max-h-[200px]"
                 rows={1}
               />
@@ -382,10 +382,10 @@ export default function AiChatPage() {
             </div>
             <button
               onClick={() => handleSend()}
-              disabled={!query.trim() || isLoading}
+              disabled={!query.trim() || isChatLoading}
               className="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-semibold text-sm flex items-center gap-2 transition-colors"
             >
-              {isLoading ? (
+              {isChatLoading ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   Analyzing...

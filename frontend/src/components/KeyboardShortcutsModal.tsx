@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Modal } from './Modal';
 import { Keyboard, Command, ArrowLeft, ArrowRight, ArrowDown, ArrowUp, Save, Copy, Search, MessageSquare } from 'lucide-react';
 

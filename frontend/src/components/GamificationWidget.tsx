@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Coins, Flame, Target, Check, RefreshCw, X } from 'lucide-react';
 import { useGamification } from '@/contexts/GamificationContext';
+import { gamificationAPI } from '@/lib/api';
 import { Modal } from './Modal';
 import toast from 'react-hot-toast';
 

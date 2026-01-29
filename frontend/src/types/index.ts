@@ -144,7 +144,7 @@ export interface ApiError extends Error {
 export interface LibraryPaper {
   id: string;
   title: string;
-  authors: string;
+  authors: string[];
   year: number;
   abstract?: string;
   keywords?: string[];

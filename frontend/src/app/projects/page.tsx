@@ -10,7 +10,7 @@ import { BookOpen, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
 
 export default function ProjectsPage() {
     const router = useRouter();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
