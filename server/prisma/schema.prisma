@@ -26,6 +26,8 @@ model User {
   mediaFiles MediaFile[]
   passwordResetTokens PasswordResetToken[]
   savedPapers SavedPaper[]
+  analyticsLogs AnalyticsLog[]
+  blacklistedTokens BlacklistedToken[]
 }
 
 model Project {
@@ -58,13 +60,15 @@ model ProjectSnapshot {
 
 model AiInteraction {
   id String @id @default(uuid())
-  role String  @db.Text
+  role String @db.Text
   content String @db.Text
   timestamp DateTime @default(now())
   projectId String
   project Project @relation(fields: [projectId], references: [id])
   tokensEarned Int @default(0)
   sessionEnded Boolean @default(false)
+  userPrompt String? @db.Text
+  aiResponse String? @db.Text
 }
 
 model ReasoningLog {
@@ -73,6 +77,8 @@ model ReasoningLog {
   nodeData Json
   createdAt DateTime @default(now())
   project Project @relation(fields: [projectId], references: [id])
+  analysis Json?
+  graphData Json?
 }
 
 model SavedPaper {
@@ -89,6 +95,7 @@ model SavedPaper {
   savedAt DateTime @default(now())
   project Project? @relation(fields: [projectId], references: [id])
   user User @relation(fields: [userId], references: [id])
+  type String @default("journal")
   @@unique([userId, paperId])
 }
 
@@ -104,6 +111,57 @@ model MediaFile {
   projectId String?
   user User @relation(fields: [userId], references: [id])
   project Project? @relation(fields: [projectId], references: [id])
+}
+
+model AnalyticsLog {
+  id String @id @default(uuid())
+  userId String?
+  feature String
+  duration Int
+  metadata Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model FailedLoginAttempt {
+  id String @id @default(uuid())
+  email String
+  ipAddress String
+  userAgent String?
+  timestamp DateTime @default(now())
+}
+
+model AccountLockout {
+  id String @id @default(uuid())
+  email String @unique
+  reason String
+  lockReason String
+  lockedUntil DateTime
+  timestamp DateTime @default(now())
+  isActive Boolean @default(true)
+  lockedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RateLimit {
+  id String @id @default(uuid())
+  key String @unique
+  count Int @default(0)
+  windowStart DateTime @default(now())
+  windowSize Int @default(3600000) // 1 hour in milliseconds
+  resetTime DateTime @default(now())
+}
+
+model BlacklistedToken {
+  id String @id @default(uuid())
+  token String @unique
+  blacklistedAt DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordResetToken {

@@ -26,7 +26,7 @@ export class EmailService {
         });
         
         this.logger.log(`Test email account created: ${account.user} / ${account.pass}`);
-        this.logger.log(`Preview URL: ${nodemailer.getTestMessageUrl(account)}`);
+        this.logger.log(`Preview URL: ${(account as any).url || 'No URL available'}`);
       });
     } else {
       // In production, configure with real SMTP settings
