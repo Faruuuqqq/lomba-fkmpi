@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto, LoginDto, ChangePasswordDto } from './auth.dto';
 import { AccountSecurityService } from '../common/services/account-security.service';
+import { PasswordResetService } from '../common/services/password-reset.service';
+import { ResetPasswordDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -11,6 +13,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private accountSecurity: AccountSecurityService,
+    private passwordResetService: PasswordResetService,
   ) { }
 
   async register(dto: RegisterDto) {
@@ -148,14 +151,8 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-    // TODO: Implement password reset with email verification
-    // This would involve:
-    // 1. Verify reset token
-    // 2. Check token expiration
-    // 3. Update user password
-    // 4. Invalidate all existing sessions
-
-    throw new UnauthorizedException('Password reset feature not yet implemented');
+    await this.passwordResetService.resetPassword({ token, newPassword });
+    return { message: 'Password reset successfully' };
   }
 
   async getSecurityStatus(userId: string): Promise<any> {

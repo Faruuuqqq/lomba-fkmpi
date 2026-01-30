@@ -11,6 +11,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => void;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
+  verifyResetToken: (token: string) => Promise<{ isValid: boolean; message: string }>;
   isAuthenticated: boolean;
 }
 
@@ -104,6 +107,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const requestPasswordReset = async (email: string) => {
+    try {
+      await authAPI.requestPasswordReset({ email });
+    } catch (error) {
+      console.error('Password reset request error:', error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (token: string, newPassword: string) => {
+    try {
+      await authAPI.resetPassword({ token, newPassword });
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw error;
+    }
+  };
+
+  const verifyResetToken = async (token: string) => {
+    try {
+      const response = await authAPI.verifyResetToken(token);
+      return response.data || response;
+    } catch (error) {
+      console.error('Token verification error:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -113,6 +144,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        requestPasswordReset,
+        resetPassword,
+        verifyResetToken,
         isAuthenticated: !!user,
       }}
     >

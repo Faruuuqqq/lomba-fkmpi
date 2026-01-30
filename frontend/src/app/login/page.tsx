@@ -232,8 +232,17 @@ export default function LoginPage() {
               </Button>
             </div>
 
-            {/* Sign Up Link */}
-            <div className="text-center">
+            {/* Forgot Password & Sign Up Links */}
+            <div className="text-center space-y-4">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/forgot-password')}
+                  className="font-bold text-bauhaus-blue uppercase tracking-wide hover:underline"
+                >
+                  FORGOT PASSWORD?
+                </button>
+              </div>
               <p className="font-medium">
                 Don't have an account?{' '}
                 <button

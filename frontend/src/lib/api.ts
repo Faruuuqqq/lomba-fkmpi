@@ -47,6 +47,12 @@ export const authAPI = {
     api.post('/auth/login', data),
   logout: () => api.post('/auth/logout'),
   getProfile: () => api.get('/auth/profile'),
+  requestPasswordReset: (data: { email: string }) =>
+    api.post('/auth/password-reset/request-reset', data),
+  resetPassword: (data: { token: string; newPassword: string }) =>
+    api.post('/auth/password-reset/reset', data),
+  verifyResetToken: (token: string) =>
+    api.get(`/auth/password-reset/verify/${token}`),
 };
 
 export const projectsAPI = {

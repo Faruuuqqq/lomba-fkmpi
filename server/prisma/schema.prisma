@@ -9,152 +9,109 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  name          String?
-  role          String    @default("USER")
-  isActive      Boolean   @default(true)
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  name String?
+  role String @default("USER")
+  isActive Boolean @default(true)
   // Gamification fields
-  tokens        Int       @default(5)  // Starting balance
-  currentStreak Int       @default(0)
-  lastActive    DateTime?
-  lastChallenge DateTime? // Track daily quiz completion
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  projects      Project[]
-  mediaFiles    MediaFile[]
+  tokens Int @default(5)  // Starting balance
+  currentStreak Int @default(0)
+  lastActive DateTime?
+  lastChallenge DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  projects Project[]
+  mediaFiles MediaFile[]
+  passwordResetTokens PasswordResetToken[]
+  savedPapers SavedPaper[]
 }
 
 model Project {
-  id           String             @id @default(uuid())
-  title        String
-  content      String             @db.Text
-  wordCount    Int                @default(0)
-  isAiUnlocked Boolean            @default(false)
-  status       String             @default("DRAFT")
-  reflection   String?            @db.Text
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  userId       String
-  user         User               @relation(fields: [userId], references: [id])
-  snapshots    ProjectSnapshot[]
-  aiChats      AiInteraction[]
+  id String @id @default(uuid())
+  title String
+  content String @db.Text
+  wordCount Int @default(0)
+  isAiUnlocked Boolean @default(false)
+  status String @default("DRAFT")
+  reflection   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  snapshots ProjectSnapshot[]
+  aiChats AiInteraction[]
   reasoningLogs ReasoningLog[]
-  mediaFiles   MediaFile[]
+  mediaFiles MediaFile[]
+  savedPapers SavedPaper[]
 }
 
 model ProjectSnapshot {
-  id        String   @id @default(uuid())
-  content   String   @db.Text
+  id String @id @default(uuid())
+  content String @db.Text
   timestamp DateTime @default(now())
-  stage     String
+  stage String
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 }
 
 model AiInteraction {
-  id          String   @id @default(uuid())
-  userPrompt  String   @db.Text
-  aiResponse  String   @db.Text
-  timestamp   DateTime @default(now())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
+  id String @id @default(uuid())
+  role String  @db.Text
+  content String @db.Text
+  timestamp DateTime @default(now())
+  projectId String
+  project Project @relation(fields: [projectId], references: [id])
+  tokensEarned Int @default(0)
+  sessionEnded Boolean @default(false)
 }
 
 model ReasoningLog {
-  id          String   @id @default(uuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  graphData   Json
-  analysis    String   @db.Text
-  timestamp   DateTime @default(now())
-}
-
-model AnalyticsLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  feature   String
-  duration  Int
-  timestamp DateTime @default(now())
-  metadata  Json?
-}
-
-model RateLimit {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  count     Int      @default(0)
-  resetTime DateTime
+  id String @id @default(uuid())
+  projectId String
+  nodeData Json
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("rate_limits")
-}
-
-model FailedLoginAttempt {
-  id        String   @id @default(uuid())
-  email     String
-  ipAddress String
-  userAgent String?
-  timestamp DateTime @default(now())
-  
-  @@map("failed_login_attempts")
-}
-
-model AccountLockout {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  lockReason String
-  lockedAt   DateTime @default(now())
-  lockedUntil DateTime
-  attempts   Int      @default(0)
-  isActive   Boolean  @default(true)
-  
-  @@map("account_lockouts")
-}
-
-model MediaFile {
-  id           String   @id @default(uuid())
-  filename     String
-  originalName String
-  mimeType     String
-  size         Int
-  path         String
-  projectId    String?
-  userId       String
-  uploadedAt   DateTime @default(now())
-  project      Project? @relation(fields: [projectId], references: [id])
-  user         User     @relation(fields: [userId], references: [id])
-  
-  @@map("media_files")
+  project Project @relation(fields: [projectId], references: [id])
 }
 
 model SavedPaper {
-  id          String   @id @default(uuid())
-  paperId     String   // OpenAlex ID or DOI
-  title       String
-  authors     String[] // Array of author names
-  year        Int
-  abstract    String?  @db.Text
-  url         String?
-  type        String   @default("journal") // journal, book, etc
-  relevance   Int      @default(0)
-  userId      String
-  projectId   String?  // Optional: link to specific project
-  savedAt     DateTime @default(now())
-  
-  @@unique([userId, paperId]) // Prevent duplicate saves
-  @@map("saved_papers")
+  id String @id @default(uuid())
+  paperId String
+  title String
+  authors String[]
+  abstract String
+  year Int
+  url String
+  relevance Int @default(0)
+  userId String
+  projectId String?
+  savedAt DateTime @default(now())
+  project Project? @relation(fields: [projectId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  @@unique([userId, paperId])
 }
 
-model BlacklistedToken {
-  id        String   @id @default(uuid())
-  token     String   // Hashed token value
-  userId    String
+model MediaFile {
+  id String @id @default(uuid())
+  filename String
+  originalName String
+  mimeType String
+  size Int
+  path String
+  uploadedAt DateTime @default(now())
+  userId String
+  projectId String?
+  user User @relation(fields: [userId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+}
+
+model PasswordResetToken {
+  id String @id @default(uuid())
+  token String @unique
+  email String
   expiresAt DateTime
+  userId String
+  user User @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
-  
-  @@index([token])
-  @@index([expiresAt])
-  @@map("blacklisted_tokens")
 }

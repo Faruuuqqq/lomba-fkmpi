@@ -5,9 +5,12 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { PasswordResetController } from './password-reset.controller';
 import { JwtStrategy } from '../common/guards/jwt.strategy';
 import { RecaptchaService } from '../common/services/recaptcha.service';
 import { AccountSecurityService } from '../common/services/account-security.service';
+import { EmailService } from '../common/services/email.service';
+import { PasswordResetService } from '../common/services/password-reset.service';
 
 @Module({
   imports: [
@@ -22,8 +25,15 @@ import { AccountSecurityService } from '../common/services/account-security.serv
     }),
     ConfigModule,
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RecaptchaService, AccountSecurityService],
-  exports: [AuthService, RecaptchaService, AccountSecurityService],
+  controllers: [AuthController, PasswordResetController],
+  providers: [
+    AuthService, 
+    JwtStrategy, 
+    RecaptchaService, 
+    AccountSecurityService,
+    EmailService,
+    PasswordResetService
+  ],
+  exports: [AuthService, RecaptchaService, AccountSecurityService, EmailService, PasswordResetService],
 })
 export class AuthModule {}
