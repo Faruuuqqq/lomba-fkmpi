@@ -105,7 +105,6 @@ export function Navbar({ showLogout = true }: NavbarProps) {
             </div>
           </div>
         )}
-        </div>
       </div>
     </nav>
   );

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Search, FileText, User, LogOut, Home, ChevronLeft, ChevronRight } from 'lucide-react';
 import { projectsAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Project {
     id: string;
