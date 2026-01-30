@@ -156,7 +156,7 @@ model RateLimit {
 
 model BlacklistedToken {
   id String @id @default(uuid())
-  token String @unique
+  tokenHash String @unique
   blacklistedAt DateTime @default(now())
   expiresAt DateTime
   createdAt DateTime @default(now())
