@@ -49,9 +49,20 @@ export function ProjectSidebar() {
         }
     };
 
-    const filteredProjects = projects.filter(p =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+const filteredProjects = projects.filter(p =>
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.title && searchQuery.length > 2) // Ensure search query is meaningful
+    ).sort((a: Project, b: Project) => {
+        // Prioritize exact matches
+        const aExact = a.title.toLowerCase() === searchQuery.toLowerCase();
+        const bExact = b.title.toLowerCase() === searchQuery.toLowerCase();
+        
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+        
+        // Then sort by most recent
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
 
     return (
         <div className={`${isCollapsed ? 'w-16' : 'w-64'} h-screen bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col transition-all duration-300`}>

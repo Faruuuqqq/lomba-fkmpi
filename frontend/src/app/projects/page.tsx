@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
 import { GamificationWidget } from '@/components/GamificationWidget';
 import { Button } from '@/components/ui/button';
-import { BookOpen, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
+import { BookOpen, ArrowRight, CheckCircle, Sparkles, Search, FilePlus } from 'lucide-react';
 
 export default function ProjectsPage() {
     const router = useRouter();
@@ -65,8 +65,8 @@ export default function ProjectsPage() {
                                     onClick={() => router.push('/library')}
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-none font-semibold uppercase tracking-wide shadow-bauhaus-lg-bauhaus"
                                 >
-                                    <BookOpen className="w-4 h-4 mr-2" />
-                                    Explore Research Library
+<FilePlus className="w-4 h-4 mr-2" />
+                                        Project Templates
                                 </Button>
                                 <Button
                                     onClick={() => router.push('/ai-chat')}
