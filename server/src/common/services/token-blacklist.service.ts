@@ -19,12 +19,11 @@ export class TokenBlacklistService {
     const decodedPayload = JSON.parse(Buffer.from(payload, 'base64').toString());
     const tokenExpiry = new Date(decodedPayload.exp * 1000);
 
-    await this.prisma.blacklistedToken.create({
+await this.prisma.blacklistedToken.create({
       data: {
-        token: this.hashToken(token),
-        userId,
+        tokenHash,
         expiresAt: tokenExpiry,
-        createdAt: new Date(),
+        userId,
       },
     });
 
@@ -36,7 +35,7 @@ export class TokenBlacklistService {
     const tokenHash = this.hashToken(token);
     const blacklistedToken = await this.prisma.blacklistedToken.findFirst({
       where: {
-        token: tokenHash,
+        tokenHash,
         expiresAt: {
           gt: new Date(),
         },

@@ -46,10 +46,9 @@ export class AccountSecurityService {
       const lockout = await this.prisma.accountLockout.findFirst({
         where: {
           email: email.toLowerCase(),
-          isActive: true,
-          lockedUntil: {
-            gt: new Date(),
-          },
+          AND: [
+            { lockedUntil: { gt: new Date() } },
+          ],
         },
         orderBy: {
           lockedUntil: 'desc',
@@ -60,15 +59,15 @@ export class AccountSecurityService {
         return { isLocked: false };
       }
 
-      // Check if lockout has expired
+// Check if lockout has expired
       if (lockout.lockedUntil <= new Date()) {
         await this.deactivateLockout(lockout.id);
         return { isLocked: false };
       }
-
+      
       return {
         isLocked: true,
-        reason: lockout.lockReason,
+        reason,
         lockedUntil: lockout.lockedUntil,
       };
 
@@ -90,10 +89,10 @@ export class AccountSecurityService {
       await this.prisma.accountLockout.updateMany({
         where: {
           email: email.toLowerCase(),
-          isActive: true,
+          lockedUntil: { gt: new Date() },
         },
         data: {
-          isActive: false,
+          lockedUntil: new Date(Date.now() - 1), // Set to past to deactivate
         },
       });
 
@@ -122,7 +121,6 @@ export class AccountSecurityService {
     const existingLockout = await this.prisma.accountLockout.findFirst({
       where: {
         email: normalizedEmail,
-        isActive: true,
         lockedUntil: {
           gt: new Date(),
         },
@@ -132,11 +130,11 @@ export class AccountSecurityService {
     // Determine if account should be locked
     let shouldLock = false;
     let lockoutDuration = this.lockoutDurationMinutes;
-    let lockReason = '';
+    let reason = '';
 
     if (recentAttempts >= this.maxFailedAttempts) {
       shouldLock = true;
-      lockReason = `Too many failed login attempts (${recentAttempts} attempts)`;
+      reason = `Too many failed login attempts (${recentAttempts} attempts)`;
 
       // Escalate lockout duration for repeated offenses
       if (existingLockout) {
@@ -151,7 +149,7 @@ export class AccountSecurityService {
 
         if (lockoutCount > 1) {
           lockoutDuration = this.lockoutEscalationMinutes;
-          lockReason += ` - Repeated offenses detected`;
+          reason += ` - Repeated offenses detected`;
         }
       }
     }
@@ -160,13 +158,12 @@ export class AccountSecurityService {
       const lockedUntil = new Date(Date.now() + lockoutDuration * 60 * 1000);
 
       if (existingLockout) {
-        // Update existing lockout
+// Update existing lockout
         await this.prisma.accountLockout.update({
           where: { id: existingLockout.id },
           data: {
             lockedUntil,
-            lockReason,
-            attempts: recentAttempts,
+            reason,
           },
         });
       } else {
@@ -174,14 +171,13 @@ export class AccountSecurityService {
         await this.prisma.accountLockout.create({
           data: {
             email: normalizedEmail,
-            lockReason,
+            reason,
             lockedUntil,
-            attempts: recentAttempts,
           },
         });
       }
 
-      this.logger.warn(`Account locked: ${email} - ${lockReason} - Locked until ${lockedUntil}`);
+      this.logger.warn(`Account locked: ${email} - ${reason} - Locked until ${lockedUntil}`);
 
       // Clean up old failed attempts
       await this.cleanupOldFailedAttempts();
@@ -270,7 +266,6 @@ export class AccountSecurityService {
       const activeLockouts = await this.prisma.accountLockout.count({
         where: {
           ...whereClause,
-          isActive: true,
           lockedUntil: {
             gt: new Date(),
           },
@@ -280,7 +275,7 @@ export class AccountSecurityService {
       const lockoutHistory = await this.prisma.accountLockout.findMany({
         where: whereClause,
         orderBy: {
-          lockedAt: 'desc',
+          timestamp: 'desc',
         },
         take: 10,
       });
@@ -349,14 +344,20 @@ export class AccountSecurityService {
       }
 
       // Check user agent patterns
-      const recentAttemptsFromUA = await this.prisma.failedLoginAttempt.count({
+      const recentAttemptsByUA = await this.prisma.failedLoginAttempt.groupBy({
+        by: ['userAgent'],
         where: {
-          userAgent,
           timestamp: {
             gte: oneHourAgo,
           },
         },
+        _count: {
+          id: true,
+        },
       });
+      
+      const recentUA = recentAttemptsByUA.find(a => a.userAgent === userAgent);
+      const recentAttemptsFromUA = recentUA ? recentUA._count.id : 0;
 
       if (recentAttemptsFromUA > 15) {
         score += 20;
