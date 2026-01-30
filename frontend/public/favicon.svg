@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <rect width="100" height="100" fill="#1f2937" rx="10"/>
+  
+  <!-- Blue Square (M) -->
+  <rect x="0" y="0" width="40" height="40" fill="#4f46e5"/>
+  <text x="20" y="28" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">M</text>
+  
+  <!-- Red Triangle (A) -->
+  <path d="M35,0 L65,40 L5,40 Z" fill="#dc2626" stroke="#121212" stroke-width="3"/>
+  <text x="35" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">A</text>
+  
+  <!-- Yellow Circle -->
+  <circle cx="75" cy="50" r="20" fill="#eab308"/>
+</svg>

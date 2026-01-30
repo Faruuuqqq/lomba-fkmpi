@@ -146,3 +146,15 @@ model SavedPaper {
   @@unique([userId, paperId]) // Prevent duplicate saves
   @@map("saved_papers")
 }
+
+model BlacklistedToken {
+  id        String   @id @default(uuid())
+  token     String   // Hashed token value
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([token])
+  @@index([expiresAt])
+  @@map("blacklisted_tokens")
+}

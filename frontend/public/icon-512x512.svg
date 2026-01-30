@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#1f2937" rx="50"/>
+  
+  <!-- Blue Square (M) -->
+  <rect x="50" y="50" width="150" height="150" fill="#4f46e5" rx="10"/>
+  <text x="125" y="140" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="white" text-anchor="middle">M</text>
+  
+  <!-- Red Triangle (A) -->
+  <path d="M150,50 L250,200 L50,200 Z" fill="#dc2626" stroke="#121212" stroke-width="10"/>
+  <text x="150" y="170" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="white" text-anchor="middle">A</text>
+  
+  <!-- Yellow Circle -->
+  <circle cx="380" cy="250" r="120" fill="#eab308"/>
+  
+  <!-- Text -->
+  <text x="256" y="400" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="#1f2937" text-anchor="middle">MITRA</text>
+  <text x="256" y="480" font-family="Arial, sans-serif" font-size="96" font-weight="bold" fill="#1f2937" text-anchor="middle">AI</text>
+</svg>

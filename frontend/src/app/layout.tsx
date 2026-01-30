@@ -18,7 +18,8 @@ export const metadata: Metadata = {
     title: 'MITRA AI',
   },
   icons: {
-    apple: '/icon-192x192.png',
+    icon: '/favicon.svg',
+    apple: '/icon-192x192.svg',
   },
 };
 

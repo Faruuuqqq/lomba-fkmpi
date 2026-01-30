@@ -1,6 +1,8 @@
 node_modules/
 .env
 .env.local
+.env.production
+.env.development
 .DS_Store
 *.log
 dist/
@@ -15,3 +17,10 @@ coverage/
 *.md
 *.txt
 prompt*.xml
+
+# Security: Never commit secrets
+**/.env
+**/.env.*
+**/keys.*
+**/*.key
+**/*.pem

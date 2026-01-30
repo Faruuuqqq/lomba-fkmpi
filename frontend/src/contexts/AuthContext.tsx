@@ -45,27 +45,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    const { data }: { data: AuthResponse } = await authAPI.login({ email, password });
-    setToken(data.access_token);
-    setUser(data.user);
-    localStorage.setItem('token', data.access_token);
+    try {
+      const response = await authAPI.login({ email, password });
+      // Handle different response structures
+      const authData = response.data || response;
+      const token = authData.access_token || authData.token;
+      const userData = authData.user || authData.user;
+      
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+      
+      setToken(token);
+      setUser(userData);
+      localStorage.setItem('token', token);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    const { data }: { data: AuthResponse } = await authAPI.register({
-      email,
-      password,
-      name,
-    });
-    setToken(data.access_token);
-    setUser(data.user);
-    localStorage.setItem('token', data.access_token);
+    try {
+      const response = await authAPI.register({
+        email,
+        password,
+        name,
+      });
+      // Handle different response structures
+      const authData = response.data || response;
+      const token = authData.access_token || authData.token;
+      const userData = authData.user || authData.user;
+      
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+      
+      setToken(token);
+      setUser(userData);
+      localStorage.setItem('token', token);
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Call backend to blacklist token
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear local storage regardless of API call result
+      localStorage.removeItem('token');
+      setToken(null);
+      setUser(null);
+    }
   };
 
   return (

@@ -29,16 +29,21 @@ import { EnhancedRateLimitGuard } from '../common/guards/enhanced-rate-limit.gua
 import { RecaptchaGuard } from '../common/guards/recaptcha.guard';
 import { RequireRecaptcha } from '../common/decorators/recaptcha.decorator';
 import { ValidationFilter } from '../common/filters/validation.filter';
+import { TokenBlacklistService } from '../common/services/token-blacklist.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
 @Controller('auth')
 @UseFilters(ValidationFilter)
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    private tokenBlacklistService: TokenBlacklistService,
+  ) { }
 
   @Post('register')
   @UseInterceptors(EnhancedRateLimitGuard)
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully', type: RegisterResponseDto })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -50,7 +55,14 @@ export class AuthController {
     this.validatePasswordStrength(dto.password);
     this.validateEmailDomain(dto.email);
 
-    return this.authService.register(dto);
+    const result = await this.authService.register(dto);
+    
+    // Ensure consistent response structure
+    return {
+      user: result.user,
+      access_token: result.token,
+      message: result.message
+    };
   }
 
   @Post('login')
@@ -66,7 +78,13 @@ export class AuthController {
     // Additional security checks
     this.validateLoginAttempt(dto);
 
-    return this.authService.login(dto, request);
+    const result = await this.authService.login(dto, request);
+    
+    // Ensure consistent response structure
+    return {
+      user: result.user,
+      access_token: result.access_token
+    };
   }
 
   @Post('login-with-recaptcha')
@@ -131,6 +149,23 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getSecurityStatus(@CurrentUser() user: any) {
     return this.authService.getSecurityStatus(user.id);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async logout(@CurrentUser() user: any, @Req() request: any) {
+    // Extract token from Authorization header
+    const authHeader = request.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (token) {
+      await this.tokenBlacklistService.addToBlacklist(token, user.id);
+    }
+    
+    return { message: 'Logout successful' };
   }
 
   private validatePasswordStrength(password: string): void {

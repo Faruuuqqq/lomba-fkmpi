@@ -9,6 +9,7 @@ import {
   ChevronRightIcon 
 } from '@heroicons/react/24/outline';
 import { useAuth } from '@/contexts/AuthContext';
+import { aiAPI } from '@/lib/api';
 
 interface GrammarIssue {
   type: 'grammar' | 'spelling' | 'style' | 'punctuation';
@@ -50,23 +51,10 @@ export default function GrammarChecker({ content, onCorrection }: GrammarChecker
     setError(null);
 
     try {
-      const response = await fetch('/api/ai/advanced/grammar-check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ text: content })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to check grammar');
-      }
-
-      const data: GrammarCheckResult = await response.json();
-      setResult(data);
+      const response = await aiAPI.checkGrammar('current-project', content);
+      setResult(response.data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to check grammar');
     } finally {
       setIsChecking(false);
     }
