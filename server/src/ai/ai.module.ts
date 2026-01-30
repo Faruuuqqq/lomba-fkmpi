@@ -12,6 +12,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   imports: [HttpModule, PrismaModule],
   controllers: [AiController, AdvancedAIController, AIChatController],
   providers: [AiService, AdvancedAIService, AIChatService],
-  exports: [AiService, AdvancedAIService],
+  exports: [AiService, AdvancedAIService, AIChatService],
 })
 export class AiModule {}

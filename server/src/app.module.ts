@@ -9,7 +9,6 @@ import { MediaModule } from './media/media.module';
 import { AdminModule } from './admin/admin.module';
 import { GamificationModule } from './gamification/gamification.module';
 import { LibraryModule } from './library/library.module';
-import { AIChatModule } from './ai/ai-chat.module';
 
 @Module({
   imports: [
@@ -25,7 +24,6 @@ import { AIChatModule } from './ai/ai-chat.module';
     AdminModule,
     GamificationModule,
     LibraryModule,
-    AIChatModule,
   ],
 })
 export class AppModule { }
