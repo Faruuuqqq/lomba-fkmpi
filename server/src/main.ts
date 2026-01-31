@@ -35,6 +35,8 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:3000',
     'https://lomba-fkmpi.vercel.app',
+    'https://www.mitraai.site',
+    'https://mitraai.site',
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
   ].filter(Boolean);
 
