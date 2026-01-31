@@ -59,15 +59,15 @@ export class AccountSecurityService {
         return { isLocked: false };
       }
 
-// Check if lockout has expired
+      // Check if lockout has expired
       if (lockout.lockedUntil <= new Date()) {
         await this.deactivateLockout(lockout.id);
         return { isLocked: false };
       }
-      
+
       return {
         isLocked: true,
-        reason,
+        reason: lockout.lockReason,
         lockedUntil: lockout.lockedUntil,
       };
 
@@ -172,6 +172,7 @@ export class AccountSecurityService {
           data: {
             email: normalizedEmail,
             reason,
+            lockReason: reason,
             lockedUntil,
           },
         });

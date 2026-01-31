@@ -1,9 +1,0 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { fileTypeFromBuffer } from 'file-type';
-
-@Injectable()
-export class MediaService {
-  constructor(private prisma: PrismaService) {}

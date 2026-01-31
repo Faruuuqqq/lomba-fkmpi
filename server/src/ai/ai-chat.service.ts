@@ -46,7 +46,16 @@ export class AIChatService {
     // Simpan suggestion ke database (bisa menggunakan AI Interactions atau table baru)
     await this.prisma.aiInteraction.create({
       data: {
-        userPrompt: `EDIT_SUGGESTION_${dto.type.toUpperCase()}`,
+        role: 'system',
+        content: `EDIT_SUGGESTION_${dto.type.toUpperCase()}`,
+        userPrompt: JSON.stringify({
+          type: dto.type,
+          original: dto.original,
+          suggestion: dto.suggestion,
+          start: dto.start,
+          end: dto.end,
+          explanation: dto.explanation,
+        }),
         aiResponse: JSON.stringify({
           type: dto.type,
           original: dto.original,
@@ -55,7 +64,8 @@ export class AIChatService {
           end: dto.end,
           explanation: dto.explanation,
         }),
-        projectId: dto.projectId || null,
+        projectId: dto.projectId || '',
+        tokensEarned: 0,
       },
     });
 
@@ -131,7 +141,8 @@ export class AIChatService {
         // Save chat history
         await this.prisma.aiInteraction.create({
           data: {
-            userPrompt: dto.message,
+            role: 'user',
+            content: dto.message,
             aiResponse,
             projectId: dto.projectId || null,
           },

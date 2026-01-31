@@ -20,7 +20,7 @@ export class LibraryService {
             return existing;
         }
 
-        return this.prisma.savedPaper.create({
+return this.prisma.savedPaper.create({
             data: {
                 userId,
                 paperId: data.id || data.paperId,
@@ -29,7 +29,6 @@ export class LibraryService {
                 year: data.year || new Date().getFullYear(),
                 abstract: data.abstract || data.description || '',
                 url: data.url || '',
-                type: data.type || 'journal',
                 relevance: data.relevance || 0,
                 projectId: data.projectId,
             }

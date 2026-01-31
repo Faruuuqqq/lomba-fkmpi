@@ -194,9 +194,12 @@ Rules:
     try {
       await this.prisma.aiInteraction.create({
         data: {
+          role: 'user',
+          content: dto.userQuery,
           userPrompt: dto.userQuery,
           aiResponse,
           projectId,
+          tokensEarned: 0,
         },
       });
     } catch (dbError) {
@@ -357,7 +360,7 @@ Return ONLY valid JSON in this exact format:
       await this.prisma.reasoningLog.create({
         data: {
           projectId,
-          graphData,
+          nodeData: graphData,
           analysis,
         },
       });
@@ -373,11 +376,11 @@ Return ONLY valid JSON in this exact format:
           userId,
           feature: 'reasoning_map',
           duration,
-          metadata: {
+          metadata: JSON.stringify({
             projectId,
             nodeCount: graphData.nodes?.length || 0,
             edgeCount: graphData.edges?.length || 0
-          }
+          })
         }
       });
     } catch (dbError) {
@@ -504,7 +507,7 @@ Return ONLY valid JSON in this exact format:
           userId,
           feature,
           duration,
-          metadata: metadata || {}
+          metadata: metadata ? JSON.stringify(metadata) : {}
         }
       });
     } catch (error) {

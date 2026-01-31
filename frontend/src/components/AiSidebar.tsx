@@ -27,7 +27,7 @@ type TabType = 'chat' | 'citations' | 'tools' | 'results';
 
 type ToneStyle = 'socratic' | 'academic' | 'formal' | 'casual';
 
-export function AiSidebar({
+export default function AiSidebar({
   projectId,
   isLocked,
   wordCount,

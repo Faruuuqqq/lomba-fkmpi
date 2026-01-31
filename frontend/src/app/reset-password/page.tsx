@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { authApi } from '@/lib/api';
+import { authAPI } from '@/lib/api';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -26,9 +26,9 @@ export default function ResetPasswordPage() {
     // Verify the token first
     const verifyToken = async () => {
       try {
-        const response = await authApi.verifyResetToken(token);
-        setIsTokenValid(response.isValid);
-        if (!response.isValid) {
+        const response = await authAPI.verifyResetToken(token);
+        setIsTokenValid(response.data.isValid);
+        if (!response.data.isValid) {
           setError('This reset link has expired or is invalid. Please request a new password reset.');
         }
       } catch (err: any) {
@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
 
     try {
-      await authApi.resetPassword({ token, newPassword: password });
+      await authAPI.resetPassword({ token, newPassword: password });
       setIsSuccess(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to reset password');

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Editor } from '@/components/Editor';
-import { AiSidebar } from '@/components/AiSidebar';
+import AiSidebar from '@/components/AiSidebar';
 import { ProjectSidebar } from '@/components/ProjectSidebar';
 import { KeyboardShortcutsModal } from '@/components/KeyboardShortcutsModal';
 import { CompetitionSubmissionModal } from '@/components/CompetitionSubmissionModal';
